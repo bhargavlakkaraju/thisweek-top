@@ -21,6 +21,18 @@ function absUrl(base: string, maybe: string | null | undefined): string | null {
   }
 }
 
+
+function httpLogo(url: string | null): string | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    if (u.protocol !== "http:" && u.protocol !== "https:") return null;
+    return u.toString();
+  } catch {
+    return null;
+  }
+}
+
 function metaContent(html: string, key: string): string | null {
   const patterns = [
     new RegExp(
@@ -108,8 +120,8 @@ export async function resolveListingIdentity(
 
     if (html) {
       logoUrl =
-        absUrl(profileUrl, metaContent(html, "og:image")) ||
-        absUrl(profileUrl, metaContent(html, "twitter:image")) ||
+        httpLogo(absUrl(profileUrl, metaContent(html, "og:image"))) ||
+        httpLogo(absUrl(profileUrl, metaContent(html, "twitter:image"))) ||
         null;
       const ogTitle = metaContent(html, "og:title");
       if (ogTitle) {
@@ -120,9 +132,11 @@ export async function resolveListingIdentity(
     }
 
     if (!logoUrl) {
-      logoUrl = `https://unavatar.io/x/${encodeURIComponent(handle)}`;
+      logoUrl = httpLogo(
+        `https://unavatar.io/x/${encodeURIComponent(handle)}`,
+      );
     }
-    if (!logoUrl) logoUrl = fallbackLogo;
+    if (!logoUrl) logoUrl = httpLogo(fallbackLogo);
 
     return {
       ok: true,
@@ -152,14 +166,14 @@ export async function resolveListingIdentity(
     if (ogDesc) description = ogDesc.slice(0, 140);
 
     logoUrl =
-      absUrl(pageUrl, metaContent(html, "og:image")) ||
-      absUrl(pageUrl, metaContent(html, "twitter:image")) ||
-      absUrl(pageUrl, linkHref(html, "apple-touch-icon")) ||
-      absUrl(pageUrl, linkHref(html, "icon")) ||
+      httpLogo(absUrl(pageUrl, metaContent(html, "og:image"))) ||
+      httpLogo(absUrl(pageUrl, metaContent(html, "twitter:image"))) ||
+      httpLogo(absUrl(pageUrl, linkHref(html, "apple-touch-icon"))) ||
+      httpLogo(absUrl(pageUrl, linkHref(html, "icon"))) ||
       null;
   }
 
-  if (!logoUrl) logoUrl = fallbackLogo;
+  if (!logoUrl) logoUrl = httpLogo(fallbackLogo);
 
   // Ensure display name length for validateDisplayName (>=2)
   if (displayName.trim().length < 2) {

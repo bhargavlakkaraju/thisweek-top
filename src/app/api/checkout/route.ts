@@ -81,7 +81,10 @@ export async function POST(req: NextRequest) {
   if (nameErr) return NextResponse.json({ error: nameErr }, { status: 400 });
 
   const logoErr = validateLogoUrl(logoUrl || undefined);
-  if (logoErr) return NextResponse.json({ error: logoErr }, { status: 400 });
+  if (logoErr) {
+    // Bad auto logo (data: URIs etc.) - drop and continue; board uses letter/favicon fallback.
+    logoUrl = "";
+  }
 
   const descCheck = validateDescription(description);
   if (!descCheck.ok) {
