@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { DM_Sans, Geist_Mono } from "next/font/google";
+import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@/components/Analytics";
 import { Footer } from "@/components/Footer";
 import { Nav } from "@/components/Nav";
+import { APP_DOMAIN } from "@/lib/constants";
 import { siteUrl } from "@/lib/site";
 import "./globals.css";
 
@@ -56,6 +60,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Nav />
         <main>{children}</main>
         <Footer />
+        <Analytics domain={APP_DOMAIN} />
+        <VercelAnalytics />
+        <SpeedInsights />
       </body>
     </html>
   );

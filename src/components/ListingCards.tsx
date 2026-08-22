@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import type { PublicRow } from "@/lib/types";
+import { track } from "@/lib/analytics";
 import { timeAgo } from "@/lib/timeAgo";
 
 /** All outbound clicks route through the counter so the number stays honest. */
@@ -73,7 +74,18 @@ function Row({ row, featured }: { row: PublicRow; featured?: boolean }) {
       <div className={featured ? "feat-body" : "list-body"}>
         <div className={featured ? "feat-top" : "list-top"}>
           <div className={featured ? "feat-name" : "list-name"}>
-            <a href={clickHref(row)} target="_blank" rel="sponsored noopener noreferrer">
+            <a
+              href={clickHref(row)}
+              target="_blank"
+              rel="sponsored noopener noreferrer"
+              onClick={() =>
+                track("listing_click", {
+                  listing: row.listingKey,
+                  rank: row.rank,
+                  tier: row.tier,
+                })
+              }
+            >
               {row.displayName}
             </a>
             <span className="tier-pill">{row.tierLabel}</span>

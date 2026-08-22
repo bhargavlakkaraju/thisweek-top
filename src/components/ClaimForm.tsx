@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { ActivityEvent, BoardView, PublicRow } from "@/lib/types";
+import { track, trackPurchaseIntent } from "@/lib/analytics";
 import { ActivityFeed } from "./ActivityFeed";
 import { HeroLadder } from "./ClaimBar";
 import { ListingCards } from "./ListingCards";
@@ -23,9 +24,21 @@ export function HomeBoard({
   const [claiming, setClaiming] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  function onSelect(tierId: string) {
+    setSelected(tierId);
+    const t = tiers.find((x) => x.id === tierId);
+    track("tier_selected", { tier: tierId, price: t?.price ?? 0 });
+  }
+
   async function onClaim(tierId: string, listingValue: string) {
     setError(null);
     setClaiming(true);
+    const tier = tiers.find((t) => t.id === tierId);
+    trackPurchaseIntent({
+      tier: tierId,
+      price: tier?.price ?? 0,
+      mode: "claim",
+    });
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -34,10 +47,20 @@ export function HomeBoard({
       });
       const data = await res.json();
       if (!res.ok) {
+        track("checkout_blocked", {
+          tier: tierId,
+          status: res.status,
+          reason: (data.error || "unknown").slice(0, 80),
+        });
         setError(data.error || "Could not start checkout.");
         return;
       }
       if (data.url) {
+        track("checkout_started", {
+          tier: tierId,
+          value: data.price ?? 0,
+          currency: "USD",
+        });
         window.location.href = data.url;
         return;
       }
@@ -54,7 +77,7 @@ export function HomeBoard({
       <HeroLadder
         tiers={tiers}
         selected={selected}
-        onSelect={setSelected}
+        onSelect={onSelect}
         listing={listing}
         onListingChange={setListing}
         onClaim={onClaim}
