@@ -51,6 +51,17 @@ async function writeJsonBlob(pathname: string, data: unknown): Promise<void> {
   });
 }
 
+/** Storage is not required for the site to render — only to change it. */
+async function tryWriteJsonBlob(pathname: string, data: unknown): Promise<boolean> {
+  try {
+    await writeJsonBlob(pathname, data);
+    return true;
+  } catch (err) {
+    console.error("blob write failed", pathname, err);
+    return false;
+  }
+}
+
 /**
  * Migrate a stored entry to the ladder shape. Pre-ladder rows carried a free
  * `bid` amount and no tier; map them onto the nearest band they could afford.
@@ -102,8 +113,10 @@ export async function readBoard(): Promise<BoardState> {
   const weekId = currentWeekId();
   const parsed = await readJsonBlob<BoardState>(BOARD_PATH);
   if (!parsed || !Array.isArray(parsed.entries)) {
+    // No board yet, or storage is unreachable. Render an empty board rather
+    // than failing the page — a read outage must never take the site down.
     const empty = emptyState(weekId);
-    await writeJsonBlob(BOARD_PATH, empty);
+    await tryWriteJsonBlob(BOARD_PATH, empty);
     return empty;
   }
   const now = new Date();
