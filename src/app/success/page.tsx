@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Success - ThisWeek.top",
+  title: "You're on the board - 111111.live",
+  robots: { index: false, follow: false },
 };
 
 export default async function SuccessPage({
@@ -14,28 +15,31 @@ export default async function SuccessPage({
   const checkoutId = sp.checkout_id;
 
   return (
-    <div className="container">
-      <div className="success-card">
-        <h1>Payment received</h1>
-        <p>
-          If Polar confirms the order, your seat updates on this week&apos;s
-          board. Webhook is the source of truth. Hold it until Monday reset.
+    <div className="wrap prose">
+      <h1>You&apos;re on the board</h1>
+      <p className="answer-first">
+        Payment received. Your seat appears as soon as Polar confirms the order
+        &mdash; usually a few seconds. The webhook is what actually places a
+        listing, so if the board looks unchanged for a moment, give it one
+        refresh.
+      </p>
+      <p>
+        Your rung is yours for the full term. Nobody can outbid you off it, and
+        the price you paid is the price you paid. We&apos;ll email you before it
+        expires.
+      </p>
+      <p>
+        Every click you receive is counted on your listing card, so you can work
+        out what you actually paid per visit. We&apos;d rather you knew.
+      </p>
+      {checkoutId ? (
+        <p className="muted" style={{ wordBreak: "break-all", fontSize: "0.78rem" }}>
+          checkout: {checkoutId}
         </p>
-        <div className="big">ThisWeek</div>
-        <p style={{ color: "var(--muted)" }}>
-          Screenshot this. Share the board. Flex the week.
-        </p>
-        {checkoutId ? (
-          <p className="hint" style={{ wordBreak: "break-all" }}>
-            checkout: {checkoutId}
-          </p>
-        ) : null}
-        <p style={{ marginTop: "1.25rem" }}>
-          <Link className="btn" href="/">
-            Back to board
-          </Link>
-        </p>
-      </div>
+      ) : null}
+      <p style={{ marginTop: "1.5rem" }}>
+        <Link href="/">&larr; Back to the board</Link>
+      </p>
     </div>
   );
 }

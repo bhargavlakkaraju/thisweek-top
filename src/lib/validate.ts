@@ -1,4 +1,4 @@
-import { MAX_BID, MIN_BID } from "./constants";
+import { type Tier, type TierId, getTier } from "./constants";
 
 const TRACKING_PARAMS = new Set([
   "utm_source",
@@ -173,20 +173,15 @@ export function validateLogoUrl(raw?: string): string | null {
   }
 }
 
-export function validateBidAmount(bid: unknown): { ok: true; bid: number } | { ok: false; error: string } {
-  if (typeof bid !== "number" || !Number.isFinite(bid)) {
-    return { ok: false, error: "Bid must be a whole dollar amount." };
+export function validateTier(
+  raw: unknown,
+): { ok: true; tier: Tier } | { ok: false; error: string } {
+  if (typeof raw !== "string" || !raw.trim()) {
+    return { ok: false, error: "Pick a tier." };
   }
-  if (!Number.isInteger(bid)) {
-    return { ok: false, error: "Bid must be whole dollars." };
-  }
-  if (bid < MIN_BID) {
-    return { ok: false, error: `Minimum bid is $${MIN_BID}.` };
-  }
-  if (bid > MAX_BID) {
-    return { ok: false, error: `Maximum bid is $${MAX_BID.toLocaleString("en-US")}.` };
-  }
-  return { ok: true, bid };
+  const tier = getTier(raw.trim() as TierId);
+  if (!tier) return { ok: false, error: "That tier does not exist." };
+  return { ok: true, tier };
 }
 
 const MAX_DESCRIPTION = 140;

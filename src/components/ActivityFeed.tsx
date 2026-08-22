@@ -4,10 +4,11 @@ import type { ActivityEvent } from "@/lib/types";
 import { timeAgo } from "@/lib/timeAgo";
 
 function activityWhat(a: ActivityEvent): string {
-  if (a.kind === "raise") return `raised to $${a.bid}`;
-  if (a.kind === "took" && a.rank) return `at #${a.rank} · $${a.bid}`;
-  if (a.rank) return `at #${a.rank} · $${a.bid}`;
-  return `bid $${a.bid}`;
+  const price = `$${a.price.toLocaleString("en-US")}`;
+  if (a.kind === "expired") return `seat expired · ${price}`;
+  if (a.kind === "upgrade" && a.rank) return `moved up to #${a.rank} · ${price}`;
+  if (a.rank) return `at #${a.rank} · ${price}`;
+  return `took a ${price} seat`;
 }
 
 function initial(name: string) {
@@ -26,7 +27,7 @@ export function ActivityFeed({ activity }: { activity: ActivityEvent[] }) {
             <div className="av">·</div>
             <div>
               <div className="who">Quiet so far</div>
-              <div className="detail">No bids yet this week</div>
+              <div className="detail">No seats taken yet</div>
             </div>
           </div>
         </div>

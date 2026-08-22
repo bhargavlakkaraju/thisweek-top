@@ -1,20 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  claimPriceForTop,
-  findByListingKey,
-  readBoard,
-  topBid,
-} from "@/lib/board";
-import { MIN_BID, TOP_BUMP } from "@/lib/constants";
+import { findByListingKey, isSoldOut, readBoard, seatsRemaining } from "@/lib/board";
 import { createCheckoutSession } from "@/lib/polar";
 import { resolveListingMeta } from "@/lib/resolveListing";
 import {
-  validateBidAmount,
   validateDescription,
   validateDisplayName,
   validateListing,
   validateLogoUrl,
+  validateTier,
 } from "@/lib/validate";
+import { tierRankIndex } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 15;
@@ -25,7 +20,7 @@ export async function POST(req: NextRequest) {
     listing?: string;
     logoUrl?: string;
     description?: string;
-    bid?: number;
+    tier?: string;
   };
 
   try {
@@ -39,33 +34,45 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: listing.error }, { status: 400 });
   }
 
-  const bidCheck = validateBidAmount(body.bid);
-  if (!bidCheck.ok) {
-    return NextResponse.json({ error: bidCheck.error }, { status: 400 });
+  const tierCheck = validateTier(body.tier);
+  if (!tierCheck.ok) {
+    return NextResponse.json({ error: tierCheck.error }, { status: 400 });
+  }
+  const tier = tierCheck.tier;
+
+  const state = await readBoard();
+
+  // Fixed price, finite seats. A sold-out band is simply closed until one expires.
+  if (isSoldOut(state.entries, tier.id)) {
+    return NextResponse.json(
+      { error: `The ${tier.label} band is sold out. A seat opens when one expires.` },
+      { status: 409 },
+    );
+  }
+
+  const existing = findByListingKey(state.entries, listing.listingKey);
+  if (existing) {
+    const sameOrLower = tierRankIndex(tier.id) >= tierRankIndex(existing.tier);
+    if (sameOrLower) {
+      return NextResponse.json(
+        {
+          error: `This listing already holds a ${existing.tier === tier.id ? "" : "higher "}seat. Pick a higher band to move up.`,
+        },
+        { status: 409 },
+      );
+    }
   }
 
   let displayName = (body.displayName || "").trim();
   let description = (body.description || "").trim();
   let logoUrl = (body.logoUrl || "").trim();
 
-  const needsResolve =
-    !displayName ||
-    displayName.length < 2 ||
-    !description ||
-    !logoUrl;
-
-  if (needsResolve) {
+  if (!displayName || displayName.length < 2 || !description || !logoUrl) {
     const resolved = await resolveListingMeta(listing.listing);
     if (resolved.ok) {
-      if (!displayName || displayName.length < 2) {
-        displayName = resolved.data.displayName;
-      }
-      if (!description) {
-        description = resolved.data.description;
-      }
-      if (!logoUrl && resolved.data.logoUrl) {
-        logoUrl = resolved.data.logoUrl;
-      }
+      if (!displayName || displayName.length < 2) displayName = resolved.data.displayName;
+      if (!description) description = resolved.data.description;
+      if (!logoUrl && resolved.data.logoUrl) logoUrl = resolved.data.logoUrl;
     }
   }
 
@@ -80,60 +87,20 @@ export async function POST(req: NextRequest) {
   const nameErr = validateDisplayName(displayName);
   if (nameErr) return NextResponse.json({ error: nameErr }, { status: 400 });
 
-  const logoErr = validateLogoUrl(logoUrl || undefined);
-  if (logoErr) {
-    // Bad auto logo (data: URIs etc.) - drop and continue; board uses letter/favicon fallback.
-    logoUrl = "";
-  }
+  if (validateLogoUrl(logoUrl || undefined)) logoUrl = "";
 
   const descCheck = validateDescription(description);
   if (!descCheck.ok) {
     return NextResponse.json({ error: descCheck.error }, { status: 400 });
   }
 
-  const state = await readBoard();
-  const existing = findByListingKey(state.entries, listing.listingKey);
-  const bid = bidCheck.bid;
-
-  let chargeAmount: number;
-  let mode: "claim" | "raise";
-
-  if (existing) {
-    if (bid <= existing.bid) {
-      return NextResponse.json(
-        { error: `Raise must beat your current bid of $${existing.bid}.` },
-        { status: 400 },
-      );
-    }
-    chargeAmount = bid - existing.bid;
-    mode = "raise";
-  } else {
-    if (bid < MIN_BID) {
-      return NextResponse.json(
-        { error: `Minimum bid is $${MIN_BID}.` },
-        { status: 400 },
-      );
-    }
-    chargeAmount = bid;
-    mode = "claim";
-  }
-
-  if (chargeAmount < 1) {
-    return NextResponse.json({ error: "Nothing to charge." }, { status: 400 });
-  }
-
-  const top = topBid(state.entries);
-  const needForOne = claimPriceForTop(state.entries);
-
   const forwarded = req.headers.get("x-forwarded-for");
   const customerIp =
-    forwarded?.split(",")[0]?.trim() ||
-    req.headers.get("cf-connecting-ip") ||
-    undefined;
+    forwarded?.split(",")[0]?.trim() || req.headers.get("cf-connecting-ip") || undefined;
 
   try {
     const checkout = await createCheckoutSession({
-      chargeCents: chargeAmount * 100,
+      chargeCents: tier.price * 100,
       customerIp,
       metadata: {
         displayName,
@@ -142,25 +109,24 @@ export async function POST(req: NextRequest) {
         listingType: listing.listingType,
         logoUrl,
         description: descCheck.description,
-        bid: String(bid),
-        chargeAmount: String(chargeAmount),
-        mode,
+        tier: tier.id,
+        price: String(tier.price),
+        mode: existing ? "upgrade" : "claim",
       },
     });
 
     return NextResponse.json({
       url: checkout.url,
       checkoutId: checkout.id,
-      chargeAmount,
-      bid,
-      mode,
+      tier: tier.id,
+      tierLabel: tier.label,
+      price: tier.price,
+      duration: tier.duration,
+      seatsLeft: seatsRemaining(state.entries, tier.id),
+      mode: existing ? "upgrade" : "claim",
       displayName,
       description: descCheck.description,
       logoUrl,
-      hint:
-        bid < needForOne
-          ? `This bid will not take #1. #1 needs at least $${needForOne} (top $${top} + $${TOP_BUMP}).`
-          : undefined,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Checkout failed.";
@@ -169,7 +135,7 @@ export async function POST(req: NextRequest) {
       {
         error:
           message.includes("POLAR_") || message.includes("not set")
-            ? "Payments are not configured yet. Set Polar env vars."
+            ? "Payments are not configured yet. Set the Polar env vars."
             : "Could not start checkout. Try again.",
         detail: process.env.NODE_ENV === "development" ? message : undefined,
       },

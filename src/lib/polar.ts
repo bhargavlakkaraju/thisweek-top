@@ -44,9 +44,9 @@ export type CheckoutMeta = {
   listingType: "url" | "handle";
   logoUrl: string;
   description: string;
-  bid: string;
-  chargeAmount: string;
-  mode: "claim" | "raise";
+  tier: string;
+  price: string;
+  mode: "claim" | "upgrade";
 };
 
 export async function createCheckoutSession(opts: {

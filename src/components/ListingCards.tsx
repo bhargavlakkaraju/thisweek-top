@@ -4,21 +4,22 @@ import type { ReactNode } from "react";
 import type { PublicRow } from "@/lib/types";
 import { timeAgo } from "@/lib/timeAgo";
 
-function listingHref(listing: string, type: "url" | "handle") {
-  if (type === "handle") {
-    const handle = listing.replace(/^@/, "");
-    return `https://x.com/${handle}`;
-  }
-  return listing;
+/** All outbound clicks route through the counter so the number stays honest. */
+export function clickHref(row: PublicRow): string {
+  return `/api/click/${row.id}`;
 }
 
-function Favicon({
-  row,
-  round,
-}: {
-  row: PublicRow;
-  round?: boolean;
-}) {
+function expiryLine(row: PublicRow): string {
+  if (!row.expiresAt) return "permanent";
+  const ms = new Date(row.expiresAt).getTime() - Date.now();
+  if (ms <= 0) return "expired";
+  const days = Math.floor(ms / 86_400_000);
+  if (days >= 1) return `${days}d left`;
+  const hours = Math.max(1, Math.floor(ms / 3_600_000));
+  return `${hours}h left`;
+}
+
+function Favicon({ row, round }: { row: PublicRow; round?: boolean }) {
   const src = row.faviconUrl || row.logoUrl;
   const initials = row.displayName.slice(0, 2).toUpperCase();
   const imgClass = round ? "fav-round" : "list-fav";
@@ -57,120 +58,39 @@ function Favicon({
   );
 }
 
-function FeaturedCard({
-  row,
-  onClaimRank,
-}: {
-  row: PublicRow;
-  onClaimRank?: (row: PublicRow) => void;
-}) {
-  const demo = row.isDemo || row.paid === false;
+function Row({ row, featured }: { row: PublicRow; featured?: boolean }) {
   const ago = timeAgo(row.updatedAt || row.createdAt);
   const isTop = row.rank <= 2;
-  const cta = `bump this rank for $${row.claimThisRankPrice}`;
 
   return (
-    <article className={`feat-card${isTop ? " is-top" : ""}`}>
-      <div className="rank-badge">#{row.rank}</div>
-      <Favicon row={row} round />
-      <div className="feat-body">
-        <div className="feat-top">
-          <div className="feat-name">
-            <a
-              href={listingHref(row.listing, row.listingType)}
-              target="_blank"
-              rel="noreferrer"
-            >
+    <article
+      className={
+        featured ? `feat-card${isTop ? " is-top" : ""}` : "list-row"
+      }
+    >
+      <div className={featured ? "rank-badge" : "list-rank"}>#{row.rank}</div>
+      <Favicon row={row} round={featured} />
+      <div className={featured ? "feat-body" : "list-body"}>
+        <div className={featured ? "feat-top" : "list-top"}>
+          <div className={featured ? "feat-name" : "list-name"}>
+            <a href={clickHref(row)} target="_blank" rel="sponsored noopener noreferrer">
               {row.displayName}
             </a>
-            {demo ? <span className="demo-pill">Demo</span> : null}
+            <span className="tier-pill">{row.tierLabel}</span>
+            {row.isDemo ? <span className="demo-pill">Demo</span> : null}
           </div>
-          <div className="feat-bid">${row.bid.toLocaleString("en-US")}</div>
         </div>
-        <div className="feat-desc">{row.description}</div>
-        <div className="feat-meta">
+        <div className={featured ? "feat-desc" : "list-desc"}>{row.description}</div>
+        <div className={featured ? "feat-meta" : "list-meta"}>
           <span>{ago}</span>
-          <span className="clicks">
-            {(row.clicks ?? 0).toLocaleString("en-US")} clicks
-          </span>
+          <span className="clicks">{row.clicks.toLocaleString("en-US")} clicks</span>
+          <span className="expiry">{expiryLine(row)}</span>
         </div>
       </div>
-      <div className="feat-bid-col">
-        <div className="feat-bid">${row.bid.toLocaleString("en-US")}</div>
-      </div>
-      <div className="feat-claim">
-        {onClaimRank ? (
-          <button
-            type="button"
-            className="claim-link"
-            onClick={() => onClaimRank(row)}
-          >
-            {cta}
-          </button>
-        ) : (
-          <a className="claim-link" href="#claim-top">
-            {cta}
-          </a>
-        )}
-      </div>
-    </article>
-  );
-}
-
-function ListRow({
-  row,
-  onClaimRank,
-}: {
-  row: PublicRow;
-  onClaimRank?: (row: PublicRow) => void;
-}) {
-  const demo = row.isDemo || row.paid === false;
-  const ago = timeAgo(row.updatedAt || row.createdAt);
-  const cta = `bump this rank for $${row.claimThisRankPrice}`;
-
-  return (
-    <article className="list-row">
-      <div className="list-rank">#{row.rank}</div>
-      <Favicon row={row} />
-      <div className="list-body">
-        <div className="list-top">
-          <div className="list-name">
-            <a
-              href={listingHref(row.listing, row.listingType)}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {row.displayName}
-            </a>
-            {demo ? <span className="demo-pill">Demo</span> : null}
-          </div>
-          <div className="list-bid">${row.bid.toLocaleString("en-US")}</div>
+      <div className={featured ? "feat-bid-col" : "list-bid-col"}>
+        <div className={featured ? "feat-bid" : "list-bid"}>
+          ${row.price.toLocaleString("en-US")}
         </div>
-        <div className="list-desc">{row.description}</div>
-        <div className="list-meta">
-          <span>{ago}</span>
-          <span className="clicks">
-            {(row.clicks ?? 0).toLocaleString("en-US")} clicks
-          </span>
-        </div>
-      </div>
-      <div className="list-bid-col">
-        <div className="list-bid">${row.bid.toLocaleString("en-US")}</div>
-      </div>
-      <div className="list-claim">
-        {onClaimRank ? (
-          <button
-            type="button"
-            className="claim-link"
-            onClick={() => onClaimRank(row)}
-          >
-            {cta}
-          </button>
-        ) : (
-          <a className="claim-link" href="#claim-top">
-            {cta}
-          </a>
-        )}
       </div>
     </article>
   );
@@ -178,26 +98,21 @@ function ListRow({
 
 export function ListingCards({
   entries,
-  onClaimRank,
-  featuredOnly,
-  listOnly,
   activitySlot,
 }: {
   entries: PublicRow[];
-  onClaimRank?: (row: PublicRow) => void;
-  featuredOnly?: boolean;
-  listOnly?: boolean;
   activitySlot?: ReactNode;
 }) {
-  if (entries.length === 0 && !listOnly) {
+  if (entries.length === 0) {
     return (
       <>
         <div className="featured">
           <article className="feat-card empty-card">
             <div className="feat-body" style={{ gridColumn: "1 / -1" }}>
-              <div className="feat-name">This week is empty</div>
+              <div className="feat-name">The board is open</div>
               <div className="feat-desc">
-                Claim #1 for $5. Board resets Monday 00:00 UTC.
+                Every band is empty. A $1 seat puts you on it for a day; $11 holds
+                a week.
               </div>
             </div>
           </article>
@@ -210,39 +125,18 @@ export function ListingCards({
   const featured = entries.filter((e) => e.rank <= 3);
   const rest = entries.filter((e) => e.rank >= 4);
 
-  if (featuredOnly) {
-    return (
-      <div className="featured">
-        {featured.map((row) => (
-          <FeaturedCard key={row.id} row={row} onClaimRank={onClaimRank} />
-        ))}
-      </div>
-    );
-  }
-
-  if (listOnly) {
-    if (rest.length === 0) return null;
-    return (
-      <div className="board-list">
-        {rest.map((row) => (
-          <ListRow key={row.id} row={row} onClaimRank={onClaimRank} />
-        ))}
-      </div>
-    );
-  }
-
   return (
     <>
       <div className="featured">
         {featured.map((row) => (
-          <FeaturedCard key={row.id} row={row} onClaimRank={onClaimRank} />
+          <Row key={row.id} row={row} featured />
         ))}
       </div>
       {activitySlot}
       {rest.length > 0 ? (
         <div className="board-list">
           {rest.map((row) => (
-            <ListRow key={row.id} row={row} onClaimRank={onClaimRank} />
+            <Row key={row.id} row={row} />
           ))}
         </div>
       ) : null}
@@ -250,21 +144,39 @@ export function ListingCards({
   );
 }
 
-export function BoardSections({
-  entries,
-  onClaimRank,
-  activity,
-}: {
-  entries: PublicRow[];
-  onClaimRank?: (row: PublicRow) => void;
-  activity: ReactNode;
-}) {
+/** Server-rendered variant for archive pages — no click counting on history. */
+export function StaticListing({ rows }: { rows: PublicRow[] }) {
   return (
-    <ListingCards
-      entries={entries}
-      onClaimRank={onClaimRank}
-      activitySlot={activity}
-    />
+    <div className="board-list">
+      {rows.map((row) => (
+        <article className="list-row" key={row.id}>
+          <div className="list-rank">#{row.rank}</div>
+          <div className="list-body">
+            <div className="list-top">
+              <div className="list-name">
+                <a
+                  href={row.listingType === "handle"
+                    ? `https://x.com/${row.listing.replace(/^@/, "")}`
+                    : row.listing}
+                  target="_blank"
+                  rel="sponsored noopener noreferrer"
+                >
+                  {row.displayName}
+                </a>
+                <span className="tier-pill">{row.tierLabel}</span>
+              </div>
+            </div>
+            <div className="list-desc">{row.description}</div>
+            <div className="list-meta">
+              <span className="clicks">{row.clicks.toLocaleString("en-US")} clicks</span>
+            </div>
+          </div>
+          <div className="list-bid-col">
+            <div className="list-bid">${row.price.toLocaleString("en-US")}</div>
+          </div>
+        </article>
+      ))}
+    </div>
   );
 }
 

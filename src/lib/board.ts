@@ -1,12 +1,32 @@
 import { randomUUID } from "crypto";
 import { get, put } from "@vercel/blob";
-import { MIN_BID, TOP_BUMP } from "./constants";
+import {
+  ENTRY_TIER,
+  TIERS,
+  type Tier,
+  type TierId,
+  expiryFor,
+  getTier,
+  tierForLegacyAmount,
+  tierRankIndex,
+} from "./constants";
 import { resolveFaviconUrl } from "./favicon";
-import type { ActivityEvent, BoardEntry, BoardState, PublicRow } from "./types";
-import { currentWeekId, nextMondayUtc } from "./week";
+import type {
+  ActivityEvent,
+  BoardEntry,
+  BoardState,
+  BoardView,
+  PublicRow,
+  TierAvailability,
+  WeekSnapshot,
+} from "./types";
+import { currentWeekId, weekEndUtc } from "./week";
 
 const BOARD_PATH = "thisweek/board.json";
 const PROCESSED_PATH = "thisweek/processed-orders.json";
+const WEEK_INDEX_PATH = "thisweek/weeks/index.json";
+const weekPath = (weekId: string) => `thisweek/weeks/${weekId}.json`;
+
 const DEFAULT_DESCRIPTION = "Paid seat";
 
 async function readJsonBlob<T>(pathname: string): Promise<T | null> {
@@ -31,55 +51,139 @@ async function writeJsonBlob(pathname: string, data: unknown): Promise<void> {
   });
 }
 
-function normalizeEntry(e: BoardEntry): BoardEntry {
+/**
+ * Migrate a stored entry to the ladder shape. Pre-ladder rows carried a free
+ * `bid` amount and no tier; map them onto the nearest band they could afford.
+ */
+function normalizeEntry(raw: BoardEntry & { bid?: number }): BoardEntry {
+  const legacyAmount = typeof raw.bid === "number" ? raw.bid : 0;
+  const tier: Tier =
+    getTier(raw.tier) ??
+    (legacyAmount > 0 ? tierForLegacyAmount(legacyAmount) : getTier(ENTRY_TIER)!);
+
+  const createdAt = raw.createdAt || new Date().toISOString();
+  const expiresAt =
+    raw.expiresAt !== undefined
+      ? raw.expiresAt
+      : expiryFor(tier, new Date(createdAt));
+
   return {
-    ...e,
+    ...raw,
+    tier: tier.id,
+    price: typeof raw.price === "number" ? raw.price : tier.price,
     description:
-      typeof e.description === "string" && e.description.trim()
-        ? e.description.trim().slice(0, 140)
+      typeof raw.description === "string" && raw.description.trim()
+        ? raw.description.trim().slice(0, 140)
         : DEFAULT_DESCRIPTION,
-    clicks: typeof e.clicks === "number" ? e.clicks : 0,
+    clicks: typeof raw.clicks === "number" ? raw.clicks : 0,
+    expiresAt,
+    createdAt,
+    updatedAt: raw.updatedAt || createdAt,
   };
+}
+
+export function isExpired(entry: BoardEntry, now: Date = new Date()): boolean {
+  if (!entry.expiresAt) return false;
+  return new Date(entry.expiresAt).getTime() <= now.getTime();
 }
 
 function emptyState(weekId: string = currentWeekId()): BoardState {
-  return {
-    weekId,
-    entries: [],
-    activity: [],
-    updatedAt: new Date().toISOString(),
-  };
+  return { weekId, entries: [], activity: [], updatedAt: new Date().toISOString() };
 }
 
-/** On every read: if stored weekId != current week, clear seats (weekly reset). */
+/**
+ * Read the live board.
+ *
+ * Ladder v2: the week no longer clears the board. Seats leave when their own
+ * `expiresAt` passes, so inventory regenerates continuously instead of all at
+ * once. `weekId` survives purely as the archive key.
+ */
 export async function readBoard(): Promise<BoardState> {
   const weekId = currentWeekId();
   const parsed = await readJsonBlob<BoardState>(BOARD_PATH);
   if (!parsed || !Array.isArray(parsed.entries)) {
     const empty = emptyState(weekId);
-    await writeBoard(empty);
+    await writeJsonBlob(BOARD_PATH, empty);
     return empty;
   }
-  if (parsed.weekId !== weekId) {
-    const rotated = emptyState(weekId);
-    await writeBoard(rotated);
-    return rotated;
-  }
+  const now = new Date();
+  const entries = parsed.entries
+    .map((e) => normalizeEntry(e as BoardEntry))
+    .filter((e) => !isExpired(e, now));
+
   return {
-    ...parsed,
-    entries: parsed.entries.map(normalizeEntry),
+    weekId,
+    entries,
     activity: Array.isArray(parsed.activity) ? parsed.activity : [],
+    updatedAt: parsed.updatedAt || new Date().toISOString(),
   };
 }
 
 export async function writeBoard(state: BoardState): Promise<void> {
   const next: BoardState = {
     weekId: state.weekId || currentWeekId(),
-    entries: state.entries.map(normalizeEntry),
+    entries: state.entries.map((e) => normalizeEntry(e)),
     activity: Array.isArray(state.activity) ? state.activity.slice(0, 24) : [],
     updatedAt: new Date().toISOString(),
   };
   await writeJsonBlob(BOARD_PATH, next);
+}
+
+/** Paid, unexpired seats. */
+export function activeEntries(entries: BoardEntry[], now: Date = new Date()): BoardEntry[] {
+  return entries.filter((e) => e.paid && !isExpired(e, now));
+}
+
+/**
+ * Rank order: band first (the ladder), then first-paid-first-placed inside the
+ * band. There is no outbidding — a paid seat holds until it expires.
+ */
+export function sortEntries(entries: BoardEntry[]): BoardEntry[] {
+  return entries.slice().sort((a, b) => {
+    const ba = tierRankIndex(a.tier);
+    const bb = tierRankIndex(b.tier);
+    if (ba !== bb) return ba - bb;
+    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+  });
+}
+
+export function seatsTaken(entries: BoardEntry[], tierId: TierId): number {
+  return activeEntries(entries).filter((e) => e.tier === tierId).length;
+}
+
+export function seatsRemaining(entries: BoardEntry[], tierId: TierId): number | null {
+  const tier = getTier(tierId);
+  if (!tier || tier.seats == null) return null;
+  return Math.max(0, tier.seats - seatsTaken(entries, tierId));
+}
+
+export function isSoldOut(entries: BoardEntry[], tierId: TierId): boolean {
+  const left = seatsRemaining(entries, tierId);
+  return left !== null && left <= 0;
+}
+
+export function availability(entries: BoardEntry[]): TierAvailability[] {
+  return TIERS.map((t) => {
+    const taken = seatsTaken(entries, t.id);
+    const remaining = t.seats == null ? null : Math.max(0, t.seats - taken);
+    return {
+      id: t.id,
+      label: t.label,
+      price: t.price,
+      duration: t.duration,
+      seats: t.seats,
+      taken,
+      remaining,
+      soldOut: remaining !== null && remaining <= 0,
+    };
+  });
+}
+
+export function findByListingKey(
+  entries: BoardEntry[],
+  listingKey: string,
+): BoardEntry | undefined {
+  return activeEntries(entries).find((e) => e.listingKey === listingKey);
 }
 
 async function readProcessed(): Promise<Set<string>> {
@@ -95,37 +199,9 @@ async function markProcessed(orderId: string): Promise<boolean> {
   return true;
 }
 
-/** Sort: higher bid first; equal bids keep older higher. */
-export function sortEntries(entries: BoardEntry[]): BoardEntry[] {
-  return entries.slice().sort((a, b) => {
-    if (b.bid !== a.bid) return b.bid - a.bid;
-    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-  });
-}
-
-export function rankedPaid(entries: BoardEntry[]): BoardEntry[] {
-  return sortEntries(entries.filter((e) => e.paid));
-}
-
-export function topBid(entries: BoardEntry[]): number {
-  const sorted = sortEntries(entries);
-  return sorted[0]?.bid ?? 0;
-}
-
-export function claimPriceForTop(entries: BoardEntry[]): number {
-  const top = topBid(entries);
-  return top === 0 ? MIN_BID : top + TOP_BUMP;
-}
-
-export function claimPriceForSeat(bid: number): number {
-  return bid + TOP_BUMP;
-}
-
-export function findByListingKey(
-  entries: BoardEntry[],
-  listingKey: string,
-): BoardEntry | undefined {
-  return rankedPaid(entries).find((e) => e.listingKey === listingKey);
+function pushActivity(state: BoardState, event: Omit<ActivityEvent, "id">): void {
+  const next: ActivityEvent = { ...event, id: randomUUID() };
+  state.activity = [next, ...(state.activity ?? [])].slice(0, 24);
 }
 
 export type SeatPayload = {
@@ -135,20 +211,12 @@ export type SeatPayload = {
   listingType: "url" | "handle";
   logoUrl?: string;
   description: string;
-  bid: number;
+  tier: TierId;
   orderId: string;
   checkoutId?: string;
 };
 
-function pushActivity(
-  state: BoardState,
-  event: Omit<ActivityEvent, "id">,
-): void {
-  const next: ActivityEvent = { ...event, id: randomUUID() };
-  const prev = Array.isArray(state.activity) ? state.activity : [];
-  state.activity = [next, ...prev].slice(0, 24);
-}
-
+/** Webhook is the only source of truth for a seat. Idempotent per order id. */
 export async function applyPaidSeat(payload: SeatPayload): Promise<BoardEntry> {
   const isNew = await markProcessed(payload.orderId);
   if (!isNew) {
@@ -157,19 +225,23 @@ export async function applyPaidSeat(payload: SeatPayload): Promise<BoardEntry> {
     if (existing) return existing;
   }
 
+  const tier = getTier(payload.tier) ?? getTier(ENTRY_TIER)!;
   const state = await readBoard();
-  const now = new Date().toISOString();
+  const now = new Date();
+  const nowIso = now.toISOString();
   const description =
     (payload.description || "").trim().slice(0, 140) || DEFAULT_DESCRIPTION;
+
   const existingIdx = state.entries.findIndex(
-    (e) => e.listingKey === payload.listingKey && e.paid,
+    (e) => e.listingKey === payload.listingKey && e.paid && !isExpired(e, now),
   );
 
   let entry: BoardEntry;
-  let kind: ActivityEvent["kind"] = "bid";
+  let kind: ActivityEvent["kind"] = "claim";
+
   if (existingIdx >= 0) {
     const prev = state.entries[existingIdx];
-    kind = "raise";
+    kind = tierRankIndex(tier.id) < tierRankIndex(prev.tier) ? "upgrade" : "claim";
     entry = {
       ...prev,
       displayName: payload.displayName,
@@ -177,9 +249,14 @@ export async function applyPaidSeat(payload: SeatPayload): Promise<BoardEntry> {
       listingType: payload.listingType,
       logoUrl: payload.logoUrl || prev.logoUrl,
       description,
-      bid: payload.bid,
+      tier: tier.id,
+      price: tier.price,
       paid: true,
-      updatedAt: now,
+      demo: false,
+      // A new purchase always buys a fresh full term from now.
+      createdAt: kind === "upgrade" ? nowIso : prev.createdAt,
+      updatedAt: nowIso,
+      expiresAt: expiryFor(tier, now),
       orderId: payload.orderId,
       checkoutId: payload.checkoutId || prev.checkoutId,
     };
@@ -196,10 +273,12 @@ export async function applyPaidSeat(payload: SeatPayload): Promise<BoardEntry> {
       listingType: payload.listingType,
       logoUrl: payload.logoUrl,
       description,
-      bid: payload.bid,
+      tier: tier.id,
+      price: tier.price,
       paid: true,
-      createdAt: now,
-      updatedAt: now,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+      expiresAt: expiryFor(tier, now),
       orderId: payload.orderId,
       checkoutId: payload.checkoutId,
       clicks: 0,
@@ -207,169 +286,148 @@ export async function applyPaidSeat(payload: SeatPayload): Promise<BoardEntry> {
     state.entries.push(entry);
   }
 
-  const ranked = sortEntries(state.entries.filter((e) => e.paid));
+  const ranked = sortEntries(activeEntries(state.entries, now));
   const rank = ranked.findIndex((e) => e.id === entry.id) + 1;
-  if (rank === 1) kind = "took";
 
   pushActivity(state, {
     displayName: entry.displayName,
-    bid: entry.bid,
+    tier: entry.tier,
+    price: entry.price,
     rank: rank > 0 ? rank : undefined,
     kind,
-    at: now,
+    at: nowIso,
   });
 
   await writeBoard(state);
   return entry;
 }
 
-export async function seedDemoUnpaid(): Promise<BoardEntry[]> {
-  const now = Date.now();
-  const weekId = currentWeekId();
-  const demos: Omit<BoardEntry, "id">[] = [
-    {
-      displayName: "NovaStack",
-      listing: "https://novastack.dev",
-      listingKey: "url:novastack.dev",
-      listingType: "url",
-      description: "Ship backend infra without the ops tax.",
-      bid: 40,
-      paid: false,
-      createdAt: new Date(now - 5 * 60_000).toISOString(),
-      updatedAt: new Date(now - 5 * 60_000).toISOString(),
-      clicks: 0,
-    },
-    {
-      displayName: "PixelForge",
-      listing: "@pixelforge",
-      listingKey: "handle:pixelforge",
-      listingType: "handle",
-      description: "Design systems that stay on brand.",
-      bid: 25,
-      paid: false,
-      createdAt: new Date(now - 4 * 60_000).toISOString(),
-      updatedAt: new Date(now - 4 * 60_000).toISOString(),
-      clicks: 0,
-    },
-    {
-      displayName: "QuietOps",
-      listing: "https://quietops.io",
-      listingKey: "url:quietops.io",
-      listingType: "url",
-      description: "Incident response without the pager panic.",
-      bid: 15,
-      paid: false,
-      createdAt: new Date(now - 3 * 60_000).toISOString(),
-      updatedAt: new Date(now - 3 * 60_000).toISOString(),
-      clicks: 0,
-    },
-    {
-      displayName: "CopperWire",
-      listing: "@copperwire",
-      listingKey: "handle:copperwire",
-      listingType: "handle",
-      description: "Hardware notes and tinkering in public.",
-      bid: 10,
-      paid: false,
-      createdAt: new Date(now - 2 * 60_000).toISOString(),
-      updatedAt: new Date(now - 2 * 60_000).toISOString(),
-      clicks: 0,
-    },
-    {
-      displayName: "DeskLamp Co",
-      listing: "https://desklamp.co",
-      listingKey: "url:desklamp.co",
-      listingType: "url",
-      description: "Warm desk light for late shipping nights.",
-      bid: 5,
-      paid: false,
-      createdAt: new Date(now - 60_000).toISOString(),
-      updatedAt: new Date(now - 60_000).toISOString(),
-      clicks: 0,
-    },
-  ];
-
-  const entries: BoardEntry[] = demos.map((d) => ({
-    ...d,
-    id: randomUUID(),
-  }));
-
-  await writeBoard({
-    weekId,
-    entries,
-    activity: [],
-    updatedAt: new Date().toISOString(),
-  });
-  return entries;
+export async function recordClick(id: string): Promise<BoardEntry | null> {
+  const state = await readBoard();
+  const idx = state.entries.findIndex((e) => e.id === id);
+  if (idx < 0) return null;
+  state.entries[idx] = {
+    ...state.entries[idx],
+    clicks: (state.entries[idx].clicks ?? 0) + 1,
+  };
+  await writeBoard(state);
+  return state.entries[idx];
 }
 
-function deriveActivity(state: BoardState): ActivityEvent[] {
-  if (Array.isArray(state.activity) && state.activity.length > 0) {
-    return state.activity.slice(0, 8);
-  }
-  const ranked = sortEntries(state.entries);
-  return ranked
-    .slice()
-    .sort(
-      (a, b) =>
-        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
-    )
-    .slice(0, 8)
-    .map((e, i) => {
-      const rank = ranked.findIndex((r) => r.id === e.id) + 1;
-      return {
-        id: e.id + ":" + e.updatedAt,
-        displayName: e.displayName,
-        bid: e.bid,
-        rank: rank > 0 ? rank : undefined,
-        kind: (rank === 1 ? "took" : "bid") as ActivityEvent["kind"],
-        at: e.updatedAt || e.createdAt,
-      };
-    });
-}
-
-export function publicBoardView(state: BoardState) {
-  const ranked = sortEntries(state.entries);
-  const weekId = state.weekId || currentWeekId();
-  const entries: PublicRow[] = ranked.map((e, i) => ({
-    rank: i + 1,
-    id: e.id,
-    displayName: e.displayName,
-    listing: e.listing,
-    listingType: e.listingType,
-    logoUrl: e.logoUrl || null,
-    faviconUrl: resolveFaviconUrl({
-      logoUrl: e.logoUrl,
+export function toPublicRows(entries: BoardEntry[], now: Date = new Date()): PublicRow[] {
+  return sortEntries(activeEntries(entries, now)).map((e, i) => {
+    const tier = getTier(e.tier);
+    return {
+      rank: i + 1,
+      id: e.id,
+      displayName: e.displayName,
       listing: e.listing,
+      listingKey: e.listingKey,
       listingType: e.listingType,
-    }),
-    description: e.description || DEFAULT_DESCRIPTION,
-    bid: e.bid,
-    paid: e.paid,
-    isDemo: !e.paid,
-    createdAt: e.createdAt,
-    updatedAt: e.updatedAt,
-    claimThisRankPrice: claimPriceForSeat(e.bid),
-    clicks: e.clicks ?? 0,
-  }));
+      logoUrl: e.logoUrl || null,
+      faviconUrl: resolveFaviconUrl({
+        logoUrl: e.logoUrl,
+        listing: e.listing,
+        listingType: e.listingType,
+      }),
+      description: e.description || DEFAULT_DESCRIPTION,
+      tier: e.tier,
+      tierLabel: tier?.label ?? `$${e.price}`,
+      price: e.price,
+      paid: e.paid,
+      isDemo: Boolean(e.demo),
+      createdAt: e.createdAt,
+      updatedAt: e.updatedAt,
+      expiresAt: e.expiresAt,
+      clicks: e.clicks ?? 0,
+    };
+  });
+}
+
+export function publicBoardView(state: BoardState): BoardView {
+  const now = new Date();
+  const rows = toPublicRows(state.entries, now);
+  const active = activeEntries(state.entries, now);
 
   return {
-    weekId,
-    resetsAt: nextMondayUtc().toISOString(),
+    weekId: state.weekId || currentWeekId(),
+    weekEndsAt: weekEndUtc().toISOString(),
     updatedAt: state.updatedAt,
-    topBid: topBid(state.entries),
-    claimOnePrice: claimPriceForTop(state.entries),
-    entries,
-    activity: deriveActivity(state),
-    visitorStub: 1204,
-    pending: state.entries
-      .filter((e) => !e.paid)
-      .map((e) => ({
-        id: e.id,
-        displayName: e.displayName,
-        listing: e.listing,
-        bid: e.bid,
-        paid: false,
-      })),
+    entries: rows,
+    activity: (state.activity ?? []).slice(0, 8),
+    tiers: availability(state.entries),
+    totals: {
+      listings: rows.length,
+      paidListings: active.filter((e) => !e.demo).length,
+      clicks: active.reduce((sum, e) => sum + (e.clicks ?? 0), 0),
+      committed: active.reduce((sum, e) => sum + (e.price ?? 0), 0),
+    },
   };
+}
+
+/* ---------------------------------------------------------------- archive */
+
+export async function readWeekIndex(): Promise<string[]> {
+  const arr = await readJsonBlob<string[]>(WEEK_INDEX_PATH);
+  return Array.isArray(arr) ? arr.slice().sort().reverse() : [];
+}
+
+export async function readWeekSnapshot(weekId: string): Promise<WeekSnapshot | null> {
+  return readJsonBlob<WeekSnapshot>(weekPath(weekId));
+}
+
+/**
+ * Freeze the board as it stands and file it under a permanent URL.
+ * This is what replaces the old destructive Monday wipe.
+ */
+export async function writeWeekSnapshot(weekId: string): Promise<WeekSnapshot> {
+  const state = await readBoard();
+  const view = publicBoardView(state);
+  const snapshot: WeekSnapshot = {
+    weekId,
+    capturedAt: new Date().toISOString(),
+    entries: view.entries,
+    totals: view.totals,
+  };
+  await writeJsonBlob(weekPath(weekId), snapshot);
+
+  const index = await readWeekIndex();
+  if (!index.includes(weekId)) {
+    await writeJsonBlob(WEEK_INDEX_PATH, [...index, weekId].sort());
+  }
+  return snapshot;
+}
+
+/** Drop expired seats and log them. Safe to run repeatedly. */
+export async function sweepExpired(): Promise<{ removed: number }> {
+  const parsed = await readJsonBlob<BoardState>(BOARD_PATH);
+  if (!parsed || !Array.isArray(parsed.entries)) return { removed: 0 };
+  const now = new Date();
+  const all = parsed.entries.map((e) => normalizeEntry(e as BoardEntry));
+  const live = all.filter((e) => !isExpired(e, now));
+  const removed = all.length - live.length;
+  if (removed === 0) return { removed: 0 };
+
+  const state: BoardState = {
+    weekId: currentWeekId(),
+    entries: live,
+    activity: Array.isArray(parsed.activity) ? parsed.activity : [],
+    updatedAt: now.toISOString(),
+  };
+  for (const gone of all.filter((e) => isExpired(e, now))) {
+    pushActivity(state, {
+      displayName: gone.displayName,
+      tier: gone.tier,
+      price: gone.price,
+      kind: "expired",
+      at: now.toISOString(),
+    });
+  }
+  await writeBoard(state);
+  return { removed };
+}
+
+/** Wipe every row. Used once to clear the seeded placeholders. */
+export async function clearBoard(): Promise<void> {
+  await writeBoard(emptyState());
 }

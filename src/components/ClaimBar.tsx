@@ -1,78 +1,37 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
-import { formatCountdownShort } from "@/lib/week";
+import { FormEvent, useState } from "react";
+import type { TierAvailability } from "@/lib/types";
 
-export function HeroClaim({
-  floor,
-  resetsAt,
-  visitorStub,
-  onlineStub,
-  topLabel,
-  listing: listingProp,
-  price: priceProp,
+function seatLine(t: TierAvailability): string {
+  if (t.seats == null) return "unlimited seats";
+  if (t.soldOut) return "sold out";
+  return `${t.remaining!.toLocaleString("en-US")} of ${t.seats.toLocaleString("en-US")} left`;
+}
+
+export function HeroLadder({
+  tiers,
+  selected,
+  onSelect,
+  listing,
   onListingChange,
-  onPriceChange,
-  onBump,
-  bumping,
+  onClaim,
+  claiming,
   error,
 }: {
-  floor: number;
-  resetsAt: string;
-  visitorStub: number;
-  onlineStub: number;
-  topLabel: string;
-  listing?: string;
-  price?: number;
-  onListingChange?: (listing: string) => void;
-  onPriceChange?: (price: number) => void;
-  onBump: (price: number, listing: string) => void;
-  bumping?: boolean;
+  tiers: TierAvailability[];
+  selected: string;
+  onSelect: (id: string) => void;
+  listing: string;
+  onListingChange: (v: string) => void;
+  onClaim: (tierId: string, listing: string) => void;
+  claiming?: boolean;
   error?: string | null;
 }) {
-  const [price, setPrice] = useState(priceProp ?? floor);
-  const [listing, setListing] = useState(listingProp ?? "");
-  const [countdown, setCountdown] = useState("");
   const [localError, setLocalError] = useState<string | null>(null);
+  const active = tiers.find((t) => t.id === selected) ?? tiers[tiers.length - 1];
 
-  useEffect(() => {
-    setPrice((p) => Math.max(floor, p));
-  }, [floor]);
-
-  useEffect(() => {
-    if (typeof priceProp === "number" && Number.isFinite(priceProp)) {
-      setPrice(Math.max(floor, priceProp));
-    }
-  }, [priceProp, floor]);
-
-  useEffect(() => {
-    if (typeof listingProp === "string") {
-      setListing(listingProp);
-    }
-  }, [listingProp]);
-
-  useEffect(() => {
-    const tick = () => {
-      const ms = Math.max(0, new Date(resetsAt).getTime() - Date.now());
-      setCountdown(formatCountdownShort(ms));
-    };
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, [resetsAt]);
-
-  function updatePrice(next: number) {
-    const v = Math.max(floor, next);
-    setPrice(v);
-    onPriceChange?.(v);
-  }
-
-  function updateListing(next: string) {
-    setListing(next);
-    onListingChange?.(next);
-  }
-
-  function submitQuick(e: FormEvent) {
+  function submit(e: FormEvent) {
     e.preventDefault();
     setLocalError(null);
     const trimmed = listing.trim();
@@ -80,80 +39,76 @@ export function HeroClaim({
       setLocalError("Enter a product URL or @handle.");
       return;
     }
-    onBump(price, trimmed);
+    if (active.soldOut) {
+      setLocalError(`The ${active.label} band is sold out. Pick another.`);
+      return;
+    }
+    onClaim(active.id, trimmed);
   }
 
   return (
     <>
-      <div className="status-row">
-        <div className="status-pill">
-          <span className="dot" aria-hidden="true" />
-          <span>
-            {onlineStub.toLocaleString("en-US")} online ·{" "}
-            {visitorStub.toLocaleString("en-US")} visitors this week ·{" "}
-            <a href="#board">see board →</a>
-          </span>
-        </div>
-      </div>
-
       <section className="hero">
-        <div className="hero-claim">
-          <span className="lead-text">Claim #1 for</span>
-          <div className="price-stepper" aria-label="Bid amount stepper">
-            <button
-              type="button"
-              className="step"
-              aria-label="Decrease bid"
-              disabled={price <= floor || bumping}
-              onClick={() => updatePrice(price - 1)}
-            >
-              −
-            </button>
-            <span className="big-price">${price}</span>
-            <button
-              type="button"
-              className="step"
-              aria-label="Increase bid"
-              disabled={bumping}
-              onClick={() => updatePrice(price + 1)}
-            >
-              +
-            </button>
-          </div>
-        </div>
+        <p className="hero-eyebrow">The domain is the price list.</p>
+        <h1 className="hero-title">
+          <span className="ones">1</span>
+          <span className="ones">11</span>
+          <span className="ones">111</span>
+          <span className="ones">1,111</span>
+          <span className="ones">11,111</span>
+          <span className="ones accent">111,111</span>
+        </h1>
         <p className="hero-sub">
-          New spots start at $5. Paying less than the #1 price still puts you on
-          the board at whatever place that bid can take.
+          Six prices. Six terms. Pay once and the rung is yours until it runs
+          out &mdash; there is no bidding, and nobody can outbid you off it at
+          three in the morning. Seats are finite: when a band fills it stays shut
+          until somebody&apos;s term expires.
         </p>
-        <p className="hero-reset">
-          Resets Monday 00:00 UTC · <strong>{countdown}</strong>
-        </p>
-        <p className="hero-top-quiet">{topLabel}</p>
       </section>
 
-      <section className="claim-strip" id="claim-top">
-        <form className="claim-strip-inner" onSubmit={submitQuick} id="claim">
+      <section className="ladder" id="ladder" aria-label="Pick a tier">
+        {tiers.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            className={`tier-card${t.id === active.id ? " is-selected" : ""}${t.soldOut ? " is-sold-out" : ""}`}
+            onClick={() => !t.soldOut && onSelect(t.id)}
+            aria-pressed={t.id === active.id}
+            disabled={t.soldOut}
+          >
+            <span className="tier-price">{t.label}</span>
+            <span className="tier-duration">{t.duration}</span>
+            <span className={`tier-seats${t.soldOut ? " sold" : ""}`}>{seatLine(t)}</span>
+          </button>
+        ))}
+      </section>
+
+      <section className="claim-strip" id="claim">
+        <form className="claim-strip-inner" onSubmit={submit}>
           <label className="claim-input">
             <span className="globe" aria-hidden="true">
-              ◎
+              &#9678;
             </span>
             <input
               type="text"
               value={listing}
-              onChange={(e) => updateListing(e.target.value)}
+              onChange={(e) => onListingChange(e.target.value)}
               placeholder="Your product URL or @handle"
               autoComplete="off"
-              disabled={bumping}
+              disabled={claiming}
               required
             />
           </label>
-          <button type="submit" className="btn-outbid" disabled={bumping}>
-            {bumping ? "Starting..." : "Bump"}
+          <button type="submit" className="btn-claim" disabled={claiming || active.soldOut}>
+            {claiming ? "Starting..." : `Take a ${active.label} seat`}
           </button>
         </form>
         <p className="claim-note">
-          Already on the list? Enter the same URL or @handle and raise your bid.
-          Logo pulls from the page automatically.
+          {active.label} buys {active.duration} on the board.{" "}
+          {active.seats == null
+            ? "This band never fills."
+            : `${active.remaining!.toLocaleString("en-US")} of ${active.seats.toLocaleString("en-US")} seats are open.`}{" "}
+          Your name, blurb and logo are read from the page you enter.
         </p>
         {localError || error ? (
           <p className="error strip-error">{localError || error}</p>
@@ -163,5 +118,5 @@ export function HeroClaim({
   );
 }
 
-/** @deprecated use HeroClaim - kept for import compatibility */
-export const ClaimBar = HeroClaim;
+export const HeroClaim = HeroLadder;
+export const ClaimBar = HeroLadder;
