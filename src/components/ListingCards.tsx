@@ -99,7 +99,7 @@ function FeaturedCard({
         <div className="feat-bid">${row.bid.toLocaleString("en-US")}</div>
       </div>
       <div className="feat-claim">
-        {!demo && onClaimRank ? (
+        {onClaimRank ? (
           <button
             type="button"
             className="claim-link"
@@ -107,8 +107,6 @@ function FeaturedCard({
           >
             {cta}
           </button>
-        ) : demo ? (
-          <span className="hint">Unpaid</span>
         ) : (
           <a className="claim-link" href="#claim">
             {cta}
@@ -160,7 +158,7 @@ function ListRow({
         <div className="list-bid">${row.bid.toLocaleString("en-US")}</div>
       </div>
       <div className="list-claim">
-        {!demo && onClaimRank ? (
+        {onClaimRank ? (
           <button
             type="button"
             className="claim-link"
@@ -168,8 +166,6 @@ function ListRow({
           >
             {cta}
           </button>
-        ) : demo ? (
-          <span className="hint">Unpaid</span>
         ) : (
           <a className="claim-link" href="#claim">
             {cta}
