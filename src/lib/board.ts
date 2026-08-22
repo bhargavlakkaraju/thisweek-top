@@ -1,16 +1,32 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { randomUUID } from "crypto";
+import { get, put } from "@vercel/blob";
 import { MIN_BID, TOP_BUMP } from "./constants";
 import type { BoardEntry, BoardState } from "./types";
 import { currentWeekId, nextMondayUtc } from "./week";
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const BOARD_FILE = path.join(DATA_DIR, "board.json");
-const PROCESSED_FILE = path.join(DATA_DIR, "processed-orders.json");
+const BOARD_PATH = "thisweek/board.json";
+const PROCESSED_PATH = "thisweek/processed-orders.json";
 
-async function ensureDataDir() {
-  await fs.mkdir(DATA_DIR, { recursive: true });
+async function readJsonBlob<T>(pathname: string): Promise<T | null> {
+  try {
+    const result = await get(pathname, { access: "private", useCache: false });
+    if (!result) return null;
+    const text = await new Response(result.stream).text();
+    if (!text) return null;
+    return JSON.parse(text) as T;
+  } catch (err) {
+    console.error("blob read failed", pathname, err);
+    return null;
+  }
+}
+
+async function writeJsonBlob(pathname: string, data: unknown): Promise<void> {
+  await put(pathname, JSON.stringify(data, null, 2), {
+    access: "private",
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    contentType: "application/json",
+  });
 }
 
 function emptyState(weekId: string = currentWeekId()): BoardState {
@@ -19,55 +35,40 @@ function emptyState(weekId: string = currentWeekId()): BoardState {
 
 /** On every read: if stored weekId != current week, clear seats (weekly reset). */
 export async function readBoard(): Promise<BoardState> {
-  await ensureDataDir();
   const weekId = currentWeekId();
-  try {
-    const raw = await fs.readFile(BOARD_FILE, "utf8");
-    const parsed = JSON.parse(raw) as BoardState;
-    if (!parsed || !Array.isArray(parsed.entries)) {
-      const empty = emptyState(weekId);
-      await writeBoard(empty);
-      return empty;
-    }
-    if (parsed.weekId !== weekId) {
-      const rotated = emptyState(weekId);
-      await writeBoard(rotated);
-      return rotated;
-    }
-    return parsed;
-  } catch {
+  const parsed = await readJsonBlob<BoardState>(BOARD_PATH);
+  if (!parsed || !Array.isArray(parsed.entries)) {
     const empty = emptyState(weekId);
     await writeBoard(empty);
     return empty;
   }
+  if (parsed.weekId !== weekId) {
+    const rotated = emptyState(weekId);
+    await writeBoard(rotated);
+    return rotated;
+  }
+  return parsed;
 }
 
 export async function writeBoard(state: BoardState): Promise<void> {
-  await ensureDataDir();
   const next: BoardState = {
     weekId: state.weekId || currentWeekId(),
     entries: state.entries,
     updatedAt: new Date().toISOString(),
   };
-  await fs.writeFile(BOARD_FILE, JSON.stringify(next, null, 2), "utf8");
+  await writeJsonBlob(BOARD_PATH, next);
 }
 
 async function readProcessed(): Promise<Set<string>> {
-  await ensureDataDir();
-  try {
-    const raw = await fs.readFile(PROCESSED_FILE, "utf8");
-    const arr = JSON.parse(raw) as string[];
-    return new Set(Array.isArray(arr) ? arr : []);
-  } catch {
-    return new Set();
-  }
+  const arr = await readJsonBlob<string[]>(PROCESSED_PATH);
+  return new Set(Array.isArray(arr) ? arr : []);
 }
 
 async function markProcessed(orderId: string): Promise<boolean> {
   const set = await readProcessed();
   if (set.has(orderId)) return false;
   set.add(orderId);
-  await fs.writeFile(PROCESSED_FILE, JSON.stringify([...set], null, 2), "utf8");
+  await writeJsonBlob(PROCESSED_PATH, [...set]);
   return true;
 }
 
@@ -230,7 +231,6 @@ export async function seedDemoUnpaid(): Promise<BoardEntry[]> {
   await writeBoard({ weekId, entries, updatedAt: new Date().toISOString() });
   return entries;
 }
-
 export function publicBoardView(state: BoardState) {
   const ranked = sortEntries(state.entries);
   const weekId = state.weekId || currentWeekId();
