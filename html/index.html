@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ThisWeek.top - Claim #1 for the week</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #07080c;
+    --panel: #10131a;
+    --panel2: #151922;
+    --border: #2a3140;
+    --text: #f4f6fb;
+    --muted: #9aa3b5;
+    --accent: #ffd60a;
+    --accent2: #00e5a8;
+    --danger: #ff5c7a;
+    --rank1: #ffd60a;
+    --rank2: #c0c7d4;
+    --rank3: #cd7f32;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Inter, system-ui, sans-serif;
+    background: radial-gradient(1200px 600px at 50% -10%, #1a2030 0%, var(--bg) 55%);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+  a { color: var(--accent2); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* NAV */
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 0; border-bottom: 1px solid var(--border);
+  }
+  .logo {
+    font-weight: 800; font-size: 1.25rem; letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  .logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 22px; align-items: center; font-size: 0.95rem; }
+  .nav-links a { color: var(--muted); font-weight: 600; }
+  .nav-links a:hover { color: var(--text); text-decoration: none; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--accent); color: #111; font-weight: 800;
+    padding: 10px 18px; border-radius: 10px; border: none; cursor: pointer;
+    font-size: 0.95rem; text-decoration: none !important;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn-ghost {
+    background: transparent; color: var(--text);
+    border: 1px solid var(--border); font-weight: 700;
+  }
+  .btn-sm { padding: 7px 12px; font-size: 0.82rem; border-radius: 8px; }
+
+  /* COUNTDOWN */
+  .countdown {
+    margin-top: 28px;
+    background: linear-gradient(135deg, #1a1520 0%, #12161f 100%);
+    border: 1px solid #3a3048;
+    border-radius: 16px;
+    padding: 18px 22px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    flex-wrap: wrap;
+  }
+  .countdown-label {
+    font-size: 0.95rem; color: var(--muted); font-weight: 600;
+  }
+  .countdown-label strong { color: var(--accent); font-weight: 800; }
+  .timer {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 1.55rem; font-weight: 700; color: var(--text);
+    letter-spacing: 0.04em;
+  }
+  .timer span { color: var(--accent); }
+
+  /* HERO */
+  .hero {
+    margin-top: 36px;
+    display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 28px;
+    align-items: center;
+  }
+  @media (max-width: 860px) { .hero { grid-template-columns: 1fr; } }
+  .hero h1 {
+    font-size: 3rem; line-height: 1.05; letter-spacing: -0.03em;
+    font-weight: 800; margin-bottom: 14px;
+  }
+  .hero h1 em {
+    font-style: normal; color: var(--accent);
+  }
+  .hero p.lead {
+    font-size: 1.15rem; color: var(--muted); max-width: 34ch; margin-bottom: 22px;
+  }
+  .honesty {
+    margin-top: 18px;
+    padding: 12px 14px;
+    border-left: 3px solid var(--accent2);
+    background: rgba(0,229,168,0.06);
+    color: #c8d0dc;
+    font-size: 0.92rem;
+    border-radius: 0 10px 10px 0;
+  }
+  .hero-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 22px;
+  }
+  .hero-card .tag {
+    display: inline-block; font-size: 0.72rem; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: #111; background: var(--accent); padding: 4px 8px; border-radius: 6px;
+    margin-bottom: 12px;
+  }
+  .hero-card .price {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 2.4rem; font-weight: 700; color: var(--text);
+  }
+  .hero-card .sub { color: var(--muted); font-size: 0.9rem; margin: 6px 0 16px; }
+  .stat-row { display: flex; gap: 14px; margin-top: 14px; }
+  .stat {
+    flex: 1; background: var(--panel2); border-radius: 10px; padding: 10px 12px;
+    border: 1px solid var(--border);
+  }
+  .stat .k { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .stat .v { font-weight: 700; font-size: 1.05rem; margin-top: 2px; }
+
+  /* BOARD */
+  section.board { margin-top: 56px; }
+  .section-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 14px; gap: 12px; flex-wrap: wrap;
+  }
+  .section-head h2 { font-size: 1.45rem; font-weight: 800; letter-spacing: -0.02em; }
+  .section-head .meta { color: var(--muted); font-size: 0.88rem; }
+  .table-wrap {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th, td {
+    text-align: left; padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.95rem;
+  }
+  th {
+    background: #0c0f15; color: var(--muted);
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.07em;
+    font-weight: 700;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  tr.rank-1 td { background: rgba(255,214,10,0.07); }
+  .rank-badge {
+    display: inline-flex; width: 32px; height: 32px; align-items: center; justify-content: center;
+    border-radius: 8px; font-weight: 800; font-family: "JetBrains Mono", monospace;
+    background: #1c2230; color: var(--text);
+  }
+  .rank-badge.r1 { background: var(--rank1); color: #111; }
+  .rank-badge.r2 { background: var(--rank2); color: #111; }
+  .rank-badge.r3 { background: var(--rank3); color: #111; }
+  .name-cell { font-weight: 700; }
+  .handle { color: var(--muted); font-family: "JetBrains Mono", monospace; font-size: 0.85rem; }
+  .bid {
+    font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--accent);
+  }
+  .crown { margin-left: 6px; }
+
+  /* HOW */
+  section.how { margin-top: 56px; margin-bottom: 40px; }
+  .steps {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px;
+  }
+  @media (max-width: 800px) { .steps { grid-template-columns: 1fr; } }
+  .step {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px;
+  }
+  .step .n {
+    font-family: "JetBrains Mono", monospace; font-weight: 700;
+    color: var(--accent); font-size: 0.85rem; margin-bottom: 8px;
+  }
+  .step h3 { font-size: 1.1rem; margin-bottom: 6px; }
+  .step p { color: var(--muted); font-size: 0.92rem; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 28px 0 40px;
+    color: var(--muted); font-size: 0.88rem;
+  }
+  footer .row {
+    display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  footer strong { color: var(--text); }
+  .disclaimer { margin-top: 12px; max-width: 70ch; line-height: 1.55; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <a class="logo" href="index.html">ThisWeek<span>.top</span></a>
+      <div class="nav-links">
+        <a href="rules.html">Rules</a>
+        <a href="#about">About</a>
+        <a class="btn" href="#claim">Claim #1</a>
+      </div>
+    </nav>
+
+    <div class="countdown">
+      <div class="countdown-label">
+        <strong>Crown resets Monday 00:00 UTC</strong>
+        <div style="margin-top:4px">Week of Aug 18 - Aug 24, 2026 · board wipes clean</div>
+      </div>
+      <div class="timer" aria-label="countdown"><span>1</span>d <span>8</span>h <span>12</span>m</div>
+    </div>
+
+    <section class="hero" id="claim">
+      <div>
+        <h1>Claim <em>#1</em> for $125</h1>
+        <p class="lead">Pay to sit on top of this week’s board. Monday UTC, everyone starts over.</p>
+        <a class="btn" href="#board">Claim #1 - $125</a>
+        <a class="btn btn-ghost" href="rules.html" style="margin-left:10px">Read rules</a>
+        <div class="honesty">
+          Paid status for this week only. Not a quality score. Not traffic.
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="tag">Live this week</div>
+        <div class="price">$120</div>
+        <div class="sub">Current #1 bid · Acme Tools · raise by $5 to take the crown</div>
+        <a class="btn" style="width:100%" href="#board">Outbid for $125</a>
+        <div class="stat-row">
+          <div class="stat"><div class="k">Min bid</div><div class="v">$5</div></div>
+          <div class="stat"><div class="k">Currency</div><div class="v">USD</div></div>
+          <div class="stat"><div class="k">Checkout</div><div class="v">Polar</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="board" id="board">
+      <div class="section-head">
+        <h2>This week’s board</h2>
+        <div class="meta">10 listings · resets Mon 00:00 UTC</div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Name</th>
+              <th>URL / @</th>
+              <th>Bid</th>
+              <th>Claim / Raise</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="rank-1">
+              <td><span class="rank-badge r1">1</span><span class="crown">👑</span></td>
+              <td class="name-cell">Acme Tools</td>
+              <td><a class="handle" href="p-acme.html">acme.tools</a></td>
+              <td class="bid">$120</td>
+              <td><a class="btn btn-sm" href="#claim">Raise · $125</a></td>
+            </tr>
+            <tr>
+              <td><span class="rank-badge r2">2</span></td>
+              <td class="name-cell">Northwind CRM</td>
+              <td><span class="handle">@northwindcrm</span></td>
+              <td class="bid">$85</td>
+              <td><a class="btn btn-sm btn-ghost" href="#claim">Raise · $90</a></td>
+            </tr>
+            <tr>
+              <td><span class="rank-badge r3">3</span></td>
+              <td class="name-cell">PixelForge</td>
+              <td><span class="handle">pixelforge.io</span></td>
+              <td class="bid">$60</td>
+              <td><a class="btn btn-sm btn-ghost" href="#claim">Raise · $65</a></td>
+            </tr>
+            <tr>
+              <td><span class="rank-badge">4</span></td>
+              <td class="name-cell">Shipfast Kit</td>
+              <td><span class="handle">@shipfastkit</span></td>
+              <td class="bid">$45</td>
+              <td><a class="btn btn-sm btn-ghost" href="#claim">Raise · $50</a></td>
+            </tr>
+            <tr>
+              <td><span class="rank-badge">5</span></td>
+              <td class="name-cell">VaultNote</td>
+              <td><span class="handle">vaultnote.app</span></td>
+              <td class="bid">$30</td>
+              <td><a class="btn btn-sm btn-ghost" href="#claim">Raise · $35</a></td>
+            </tr>
+            <tr>
+              <td><span class="rank-badge">6</span></td>
+              <td class="name-cell">Orbit Mail</td>
+              <td><span class="handle">@orbitmail</span></td>
+              <td class="bid">$22</td>
+              <td><a class="btn btn-sm btn-ghost" href="#claim">Raise · $27</a></td>
+            </tr>
+            <tr>
+              <td><span class="rank-badge">7</span></td>
+              <td class="name-cell">ClearLedger</td>
+              <td><span class="handle">clearledger.co</span></td>
+              <td class="bid">$18</td>
+              <td><a class="btn btn-sm btn-ghost" href="#claim">Raise · $23</a></td>
+            </tr>
+            <tr>
+              <td><span class="rank-badge">8</span></td>
+              <td class="name-cell">StackPulse</td>
+              <td><span class="handle">@stackpulse</span></td>
+              <td class="bid">$12</td>
+              <td><a class="btn btn-sm btn-ghost" href="#claim">Raise · $17</a></td>
+            </tr>
+            <tr>
+              <td><span class="rank-badge">9</span></td>
+              <td class="name-cell">Formly</td>
+              <td><span class="handle">formly.dev</span></td>
+              <td class="bid">$8</td>
+              <td><a class="btn btn-sm btn-ghost" href="#claim">Raise · $13</a></td>
+            </tr>
+            <tr>
+              <td><span class="rank-badge">10</span></td>
+              <td class="name-cell">TinyHook</td>
+              <td><span class="handle">@tinyhook</span></td>
+              <td class="bid">$5</td>
+              <td><a class="btn btn-sm btn-ghost" href="#claim">Raise · $10</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="how" id="about">
+      <div class="section-head">
+        <h2>How it works</h2>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="n">01</div>
+          <h3>Pick a seat</h3>
+          <p>List a product URL or X @handle. Min bid $5. To take #1, pay current top + $5.</p>
+        </div>
+        <div class="step">
+          <div class="n">02</div>
+          <h3>Pay the difference</h3>
+          <p>Checkout via Polar. Raising your own listing? You only pay the gap to the new bid.</p>
+        </div>
+        <div class="step">
+          <div class="n">03</div>
+          <h3>Own the week</h3>
+          <p>You hold the rank until someone outbids you - or until Monday 00:00 UTC when the crown resets.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="row">
+        <div>
+          <strong>ThisWeek.top</strong> · weekly pay-to-rank board<br />
+          Payments via <strong>Polar</strong>. Demo mock - not live checkout.
+        </div>
+        <div>
+          <a href="rules.html">Rules</a> ·
+          <a href="#about">About</a> ·
+          <a href="#claim">Claim #1</a>
+        </div>
+      </div>
+      <p class="disclaimer">
+        Not affiliated with Outbid or any other ranking product. Paid placement is status for this week only -
+        not a quality score, endorsement, or traffic guarantee. Board resets every Monday 00:00 UTC.
+      </p>
+    </footer>
+  </div>
+</body>
+</html>
