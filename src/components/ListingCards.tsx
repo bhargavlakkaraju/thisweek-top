@@ -67,7 +67,7 @@ function FeaturedCard({
   const demo = row.isDemo || row.paid === false;
   const ago = timeAgo(row.updatedAt || row.createdAt);
   const isTop = row.rank <= 2;
-  const cta = `claim this rank for $${row.claimThisRankPrice}`;
+  const cta = `bump this rank for $${row.claimThisRankPrice}`;
 
   return (
     <article className={`feat-card${isTop ? " is-top" : ""}`}>
@@ -108,7 +108,7 @@ function FeaturedCard({
             {cta}
           </button>
         ) : (
-          <a className="claim-link" href="#claim">
+          <a className="claim-link" href="#claim-top">
             {cta}
           </a>
         )}
@@ -126,7 +126,7 @@ function ListRow({
 }) {
   const demo = row.isDemo || row.paid === false;
   const ago = timeAgo(row.updatedAt || row.createdAt);
-  const cta = `claim this rank for $${row.claimThisRankPrice}`;
+  const cta = `bump this rank for $${row.claimThisRankPrice}`;
 
   return (
     <article className="list-row">
@@ -167,7 +167,7 @@ function ListRow({
             {cta}
           </button>
         ) : (
-          <a className="claim-link" href="#claim">
+          <a className="claim-link" href="#claim-top">
             {cta}
           </a>
         )}
