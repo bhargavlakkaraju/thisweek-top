@@ -3,7 +3,7 @@ import Link from "next/link";
 export function Nav() {
   return (
     <header className="site-header">
-      <div className="container nav">
+      <div className="wrap nav">
         <Link href="/" className="brand">
           ThisWeek<span>.top</span>
         </Link>
@@ -12,9 +12,6 @@ export function Nav() {
           <Link href="/#claim">Claim</Link>
           <Link href="/rules">Rules</Link>
           <Link href="/about">About</Link>
-          <Link href="/#claim" className="btn btn-sm">
-            Claim #1
-          </Link>
         </nav>
       </div>
     </header>

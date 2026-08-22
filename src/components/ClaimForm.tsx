@@ -3,7 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import type { ActivityEvent, PublicRow } from "@/lib/types";
 import { ActivityFeed } from "./ActivityFeed";
-import { ClaimBar } from "./ClaimBar";
+import { HeroClaim } from "./ClaimBar";
 import { ListingCards } from "./ListingCards";
 
 type Prefill = Partial<{
@@ -165,6 +165,7 @@ export function HomeBoard({
   topLabel: string;
 }) {
   const [raisePrefill, setRaisePrefill] = useState<Prefill | undefined>();
+  const onlineStub = Math.max(12, Math.round(visitorStub / 8.5));
 
   function scrollToClaim(prefill?: Prefill) {
     if (prefill) setRaisePrefill(prefill);
@@ -174,80 +175,60 @@ export function HomeBoard({
     });
   }
 
+  function claimRank(row: PublicRow) {
+    scrollToClaim({
+      displayName: row.displayName,
+      listing: row.listing,
+      logoUrl: row.logoUrl || "",
+      description: row.description || "",
+      bid: row.claimThisRankPrice,
+    });
+  }
+
   return (
-    <>
-      <ClaimBar
+    <div className="wrap home-main">
+      <HeroClaim
         floor={claimOnePrice}
         resetsAt={resetsAt}
-        onClaim={(price) => {
-          scrollToClaim({ bid: price });
+        visitorStub={visitorStub}
+        onlineStub={onlineStub}
+        topLabel={`${topLabel} · ${weekLabel}`}
+        onClaim={(price, listing) => {
+          scrollToClaim({
+            bid: price,
+            listing: listing || undefined,
+          });
         }}
       />
 
-      <div className="container home-main">
-        <section className="hero hero-compact">
-          <h1>
-            Claim #1 for <em>${claimOnePrice}</em>
-          </h1>
-          <p className="lead">
-            Pay to stand above everyone else this week. Rank is the bid. Board
-            resets Monday 00:00 UTC.
-          </p>
-          <div className="meta-row">
-            <span className="dot-live">{topLabel}</span>
-            <span className="visitors">
-              {visitorStub.toLocaleString("en-US")} visitors this week
-            </span>
-            <span>{weekLabel}</span>
-          </div>
-        </section>
-
-        <div className="main-grid" id="board">
-          <section>
-            <div className="section-head">
-              <h2>This week&apos;s board</h2>
-              <span className="section-meta">
-                {initialEntries.length} listing
-                {initialEntries.length === 1 ? "" : "s"} · min $5
-              </span>
-            </div>
-            <ListingCards
-              entries={initialEntries}
-              onClaimRank={(row) => {
-                scrollToClaim({
-                  displayName: row.displayName,
-                  listing: row.listing,
-                  logoUrl: row.logoUrl || "",
-                  description: row.description || "",
-                  bid: row.claimThisRankPrice,
-                });
-              }}
-            />
-          </section>
-
-          <ActivityFeed activity={activity} resetsAt={resetsAt} />
-        </div>
-
-        <section className="claim-section">
-          <div className="claim-panel">
-            <div className="panel-head" style={{ border: "none", padding: 0, background: "transparent", marginBottom: "0.5rem" }}>
-              <h2 style={{ textTransform: "none", letterSpacing: "-0.03em", fontSize: "1.15rem", color: "var(--text)" }}>
-                {raisePrefill ? "Raise" : "Claim a seat"}
-              </h2>
-            </div>
-            <ClaimForm
-              key={JSON.stringify(raisePrefill) + String(claimOnePrice)}
-              claimOnePrice={claimOnePrice}
-              prefill={raisePrefill}
-            />
-          </div>
-        </section>
-
-        <div className="honesty" id="rules">
-          Paid status. Not a quality score. No traffic promises. No forever
-          rank. Board clears Monday 00:00 UTC.
-        </div>
+      <div id="board">
+        <ListingCards
+          entries={initialEntries}
+          featuredOnly
+          onClaimRank={claimRank}
+        />
+        <ActivityFeed activity={activity} />
+        <ListingCards
+          entries={initialEntries}
+          listOnly
+          onClaimRank={claimRank}
+        />
       </div>
-    </>
+
+      <section className="claim-section">
+        <div className="claim-panel">
+          <ClaimForm
+            key={JSON.stringify(raisePrefill) + String(claimOnePrice)}
+            claimOnePrice={claimOnePrice}
+            prefill={raisePrefill}
+          />
+        </div>
+      </section>
+
+      <div className="honesty" id="rules">
+        Paid status. Not a quality score. No traffic promises. No forever rank.
+        Board clears Monday 00:00 UTC.
+      </div>
+    </div>
   );
 }
