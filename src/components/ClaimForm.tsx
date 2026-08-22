@@ -165,7 +165,7 @@ export function HomeBoard({
   topLabel: string;
 }) {
   const [raisePrefill, setRaisePrefill] = useState<Prefill | undefined>();
-  const onlineStub = Math.max(12, Math.round(visitorStub / 8.5));
+  void weekLabel;
 
   function scrollToClaim(prefill?: Prefill) {
     if (prefill) setRaisePrefill(prefill);
@@ -191,8 +191,8 @@ export function HomeBoard({
         floor={claimOnePrice}
         resetsAt={resetsAt}
         visitorStub={visitorStub}
-        onlineStub={onlineStub}
-        topLabel={`${topLabel} · ${weekLabel}`}
+        onlineStub={37}
+        topLabel={topLabel}
         onClaim={(price, listing) => {
           scrollToClaim({
             bid: price,
