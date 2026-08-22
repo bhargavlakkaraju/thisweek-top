@@ -8,23 +8,31 @@ export function Nav() {
           <span className="brand-mark" aria-hidden="true">
             <svg
               className="brand-mark-svg"
-              viewBox="0 0 22 14"
+              viewBox="0 0 20 20"
               width="18"
-              height="12"
+              height="18"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
-              <path
-                d="M1.5 7.2 4.8 10.4 11.2 2.2"
+              <rect
+                x="1.25"
+                y="1.25"
+                width="17.5"
+                height="17.5"
+                rx="5"
                 stroke="currentColor"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                strokeWidth="1.75"
               />
               <path
-                d="M9.2 7.2 12.5 10.4 19.2 2"
+                d="M10 14.2V6.6"
                 stroke="currentColor"
-                strokeWidth="2.2"
+                strokeWidth="1.85"
+                strokeLinecap="round"
+              />
+              <path
+                d="M6.6 9.4 10 6.1 13.4 9.4"
+                stroke="currentColor"
+                strokeWidth="1.85"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
