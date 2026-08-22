@@ -118,16 +118,23 @@ export function ListingCards({
   if (entries.length === 0) {
     return (
       <>
-        <div className="featured">
-          <article className="feat-card empty-card">
-            <div className="feat-body" style={{ gridColumn: "1 / -1" }}>
-              <div className="feat-name">The board is open</div>
-              <div className="feat-desc">
-                Every band is empty. A $1 seat puts you on it for a day; $11 holds
-                a week.
-              </div>
-            </div>
-          </article>
+        <div className="empty-board">
+          <h2>Nobody is on the board yet</h2>
+          <p>
+            Which is the whole opportunity, and it is worth being precise about
+            why. Inside every band, the earliest seat outranks every seat bought
+            after it &mdash; for the entire term, permanently, with no way to buy
+            past it. On an auction board that advantage lasts until someone
+            outspends you. Here it cannot be bought at all.
+          </p>
+          <p>
+            The first listing at any rung holds the top of that band from the
+            moment it lands. $1 tests that for a day. $11 holds it for a week.
+          </p>
+          <p className="empty-note">
+            Nothing on this page is padded with placeholder listings. An empty
+            board is shown empty.
+          </p>
         </div>
         {activitySlot}
       </>

@@ -1149,3 +1149,15 @@ button.claim-link {
 .reserve-actions .btn-claim { display: inline-flex; align-items: center; text-decoration: none; }
 .reserve-dismiss { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.85rem; text-decoration: underline; }
 .reserve-note { font-size: 0.78rem; color: var(--muted); }
+
+/* Cold start — the board is genuinely empty, so sell that honestly */
+.empty-board {
+  margin: 1.5rem 0 0.5rem;
+  padding: 1.75rem 1.6rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+}
+.empty-board h2 { font-size: 1.15rem; letter-spacing: -0.015em; margin-bottom: 0.7rem; }
+.empty-board p { color: var(--muted-2); font-size: 0.94rem; line-height: 1.65; margin-bottom: 0.75rem; max-width: 44rem; }
+.empty-board .empty-note { font-size: 0.8rem; color: var(--muted); margin-bottom: 0; }
