@@ -204,14 +204,8 @@ export function HomeBoard({
       <div id="board">
         <ListingCards
           entries={initialEntries}
-          featuredOnly
           onClaimRank={claimRank}
-        />
-        <ActivityFeed activity={activity} />
-        <ListingCards
-          entries={initialEntries}
-          listOnly
-          onClaimRank={claimRank}
+          activitySlot={<ActivityFeed activity={activity} />}
         />
       </div>
 

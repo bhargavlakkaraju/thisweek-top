@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import type { PublicRow } from "@/lib/types";
 import { timeAgo } from "@/lib/timeAgo";
 
@@ -184,24 +185,29 @@ export function ListingCards({
   onClaimRank,
   featuredOnly,
   listOnly,
+  activitySlot,
 }: {
   entries: PublicRow[];
   onClaimRank?: (row: PublicRow) => void;
   featuredOnly?: boolean;
   listOnly?: boolean;
+  activitySlot?: ReactNode;
 }) {
   if (entries.length === 0 && !listOnly) {
     return (
-      <div className="featured">
-        <article className="feat-card empty-card">
-          <div className="feat-body" style={{ gridColumn: "1 / -1" }}>
-            <div className="feat-name">This week is empty</div>
-            <div className="feat-desc">
-              Claim #1 for $5. Board resets Monday 00:00 UTC.
+      <>
+        <div className="featured">
+          <article className="feat-card empty-card">
+            <div className="feat-body" style={{ gridColumn: "1 / -1" }}>
+              <div className="feat-name">This week is empty</div>
+              <div className="feat-desc">
+                Claim #1 for $5. Board resets Monday 00:00 UTC.
+              </div>
             </div>
-          </div>
-        </article>
-      </div>
+          </article>
+        </div>
+        {activitySlot}
+      </>
     );
   }
 
@@ -236,6 +242,7 @@ export function ListingCards({
           <FeaturedCard key={row.id} row={row} onClaimRank={onClaimRank} />
         ))}
       </div>
+      {activitySlot}
       {rest.length > 0 ? (
         <div className="board-list">
           {rest.map((row) => (
@@ -244,6 +251,24 @@ export function ListingCards({
         </div>
       ) : null}
     </>
+  );
+}
+
+export function BoardSections({
+  entries,
+  onClaimRank,
+  activity,
+}: {
+  entries: PublicRow[];
+  onClaimRank?: (row: PublicRow) => void;
+  activity: ReactNode;
+}) {
+  return (
+    <ListingCards
+      entries={entries}
+      onClaimRank={onClaimRank}
+      activitySlot={activity}
+    />
   );
 }
 
