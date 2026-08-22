@@ -58,11 +58,16 @@ export async function createCheckoutSession(opts: {
   const appUrl = getAppUrl();
 
   // Product should allow custom / pay-what-you-want amounts. amount is cents.
+  const metadata: Record<string, string> = {};
+  for (const [k, v] of Object.entries(opts.metadata)) {
+    if (v != null && String(v).length > 0) metadata[k] = String(v);
+  }
+
   const checkout = await polar.checkouts.create({
     products: [productId],
     amount: opts.chargeCents,
     successUrl: `${appUrl}/success?checkout_id={CHECKOUT_ID}`,
-    metadata: opts.metadata,
+    metadata,
     customerIpAddress: opts.customerIp,
   });
 
