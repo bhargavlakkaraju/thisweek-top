@@ -81,3 +81,38 @@ export function formatCountdownShort(ms: number): string {
   const mins = Math.floor((totalSec % 3600) / 60);
   return `${days}d ${hours}h ${mins}m`;
 }
+
+
+/** End of the current archive week (next Monday 00:00 UTC). */
+export function weekEndUtc(now: Date = new Date()): Date {
+  return nextMondayUtc(now);
+}
+
+/** Previous week's archive key, e.g. the one a Monday snapshot should close. */
+export function previousWeekId(now: Date = new Date()): string {
+  const start = weekStartUtc(currentWeekId(now));
+  start.setUTCDate(start.getUTCDate() - 7);
+  return start.toISOString().slice(0, 10);
+}
+
+/** "17-23 Aug 2026" for archive page titles. */
+export function formatWeekLabel(weekId: string): string {
+  const start = weekStartUtc(weekId);
+  const end = new Date(start);
+  end.setUTCDate(end.getUTCDate() + 6);
+  const sameMonth = start.getUTCMonth() === end.getUTCMonth();
+  const sm = MON[start.getUTCMonth()];
+  const em = MON[end.getUTCMonth()];
+  const year = end.getUTCFullYear();
+  if (sameMonth) {
+    return `${start.getUTCDate()}-${end.getUTCDate()} ${em} ${year}`;
+  }
+  return `${start.getUTCDate()} ${sm} - ${end.getUTCDate()} ${em} ${year}`;
+}
+
+export function isValidWeekId(weekId: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(weekId)) return false;
+  const d = new Date(`${weekId}T00:00:00.000Z`);
+  if (Number.isNaN(d.getTime())) return false;
+  return d.getUTCDay() === 1;
+}

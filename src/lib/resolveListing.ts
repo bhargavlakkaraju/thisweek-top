@@ -82,7 +82,7 @@ async function fetchHtml(url: string, ms = 2800): Promise<string | null> {
       redirect: "follow",
       headers: {
         "user-agent":
-          "Mozilla/5.0 (compatible; ThisWeekBot/1.0; +https://thisweek-ship.vercel.app)",
+          "Mozilla/5.0 (compatible; OnesBot/1.0; +https://111111.live)",
         accept: "text/html,application/xhtml+xml",
       },
     });

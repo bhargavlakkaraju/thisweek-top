@@ -1,150 +1,91 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { ActivityEvent, PublicRow } from "@/lib/types";
+import { useState } from "react";
+import type { ActivityEvent, BoardView, PublicRow } from "@/lib/types";
 import { ActivityFeed } from "./ActivityFeed";
-import { HeroClaim } from "./ClaimBar";
+import { HeroLadder } from "./ClaimBar";
 import { ListingCards } from "./ListingCards";
 
 export function HomeBoard({
-  initialEntries,
-  claimOnePrice,
+  entries,
   activity,
-  resetsAt,
-  visitorStub,
-  weekLabel,
-  topLabel,
+  tiers,
+  totals,
 }: {
-  initialEntries: PublicRow[];
-  claimOnePrice: number;
+  entries: PublicRow[];
   activity: ActivityEvent[];
-  resetsAt: string;
-  visitorStub: number;
-  weekLabel: string;
-  topLabel: string;
+  tiers: BoardView["tiers"];
+  totals: BoardView["totals"];
 }) {
+  const firstOpen = tiers.slice().reverse().find((t) => !t.soldOut) ?? tiers[tiers.length - 1];
   const [listing, setListing] = useState("");
-  const [price, setPrice] = useState(claimOnePrice);
-  const [bumping, setBumping] = useState(false);
+  const [selected, setSelected] = useState(firstOpen.id as string);
+  const [claiming, setClaiming] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  void weekLabel;
 
-  useEffect(() => {
-    setPrice((p) => Math.max(claimOnePrice, p));
-  }, [claimOnePrice]);
-
-  function bumpRank(row: PublicRow) {
-    setListing(row.listing);
-    setPrice(row.claimThisRankPrice);
+  async function onClaim(tierId: string, listingValue: string) {
     setError(null);
-    requestAnimationFrame(() => {
-      const el = document.getElementById("claim-top");
-      el?.scrollIntoView({ behavior: "smooth", block: "start" });
-      const input = el?.querySelector("input");
-      if (input instanceof HTMLInputElement) input.focus();
-    });
-  }
-
-  async function onBump(bid: number, listingValue: string) {
-    setError(null);
-    setBumping(true);
+    setClaiming(true);
     try {
-      let displayName: string | undefined;
-      let description: string | undefined;
-      let logoUrl: string | undefined;
-
-      try {
-        const resolveRes = await fetch("/api/resolve-listing", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ listing: listingValue }),
-        });
-        const resolved = await resolveRes.json();
-        if (resolveRes.ok) {
-          displayName = resolved.displayName;
-          description = resolved.description || "Paid seat";
-          logoUrl = resolved.logoUrl || undefined;
-        } else if (resolved.error) {
-          setError(resolved.error);
-          setBumping(false);
-          return;
-        }
-      } catch {
-        // Checkout auto-resolves server-side if client resolve fails.
-      }
-
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          listing: listingValue,
-          bid,
-          displayName,
-          description: description || "Paid seat",
-          logoUrl,
-        }),
+        body: JSON.stringify({ listing: listingValue, tier: tierId }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Checkout failed.");
-        setBumping(false);
+        setError(data.error || "Could not start checkout.");
         return;
       }
       if (data.url) {
         window.location.href = data.url;
         return;
       }
-      setError("Checkout URL missing.");
-      setBumping(false);
-    } catch {
-      setError("Network error. Try again.");
-      setBumping(false);
+      setError("Checkout did not return a payment link.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setClaiming(false);
     }
   }
 
   return (
-    <div className="wrap home-main">
-      <HeroClaim
-        floor={claimOnePrice}
-        resetsAt={resetsAt}
-        visitorStub={visitorStub}
-        onlineStub={37}
-        topLabel={topLabel}
+    <div className="wrap">
+      <HeroLadder
+        tiers={tiers}
+        selected={selected}
+        onSelect={setSelected}
         listing={listing}
-        price={price}
         onListingChange={setListing}
-        onPriceChange={setPrice}
-        onBump={onBump}
-        bumping={bumping}
+        onClaim={onClaim}
+        claiming={claiming}
         error={error}
       />
 
-      <div id="board">
+      <section className="totals-bar" aria-label="Board totals">
+        <span>
+          <strong>{totals.listings.toLocaleString("en-US")}</strong> listings live
+        </span>
+        <span>
+          <strong>{totals.clicks.toLocaleString("en-US")}</strong> clicks sent
+        </span>
+        <span>
+          <strong>${totals.committed.toLocaleString("en-US")}</strong> on the board
+        </span>
+        <a href="/stats">all stats &rarr;</a>
+      </section>
+
+      <section id="board">
         <ListingCards
-          entries={initialEntries}
-          onClaimRank={bumpRank}
+          entries={entries}
           activitySlot={<ActivityFeed activity={activity} />}
         />
-      </div>
+      </section>
 
-      <div className="honesty" id="rules">
-        Paid status. Not a quality score. No traffic promises. No forever rank.
-        Board clears Monday 00:00 UTC.
-      </div>
+      <p className="honesty">
+        Paid placement. Not a quality score, not an endorsement, and no promise of
+        traffic. Every click number on this page is measured, never estimated.
+      </p>
     </div>
   );
-}
-
-/** Kept for import compatibility - homepage no longer shows the long bid form. */
-export function ClaimForm(_props: {
-  claimOnePrice: number;
-  prefill?: Partial<{
-    displayName: string;
-    listing: string;
-    logoUrl: string;
-    description: string;
-    bid: number;
-  }>;
-}) {
-  return null;
 }

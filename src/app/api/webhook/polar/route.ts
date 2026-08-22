@@ -1,5 +1,6 @@
 import { Webhooks } from "@polar-sh/nextjs";
 import { applyPaidSeat } from "@/lib/board";
+import { getTier } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -9,23 +10,16 @@ async function fulfillFromMetadata(
   checkoutId?: string,
 ) {
   if (!metadata) return;
-  const displayName = metadata.displayName;
-  const listing = metadata.listing;
-  const listingKey = metadata.listingKey;
+  const { displayName, listing, listingKey } = metadata;
   const listingType = metadata.listingType as "url" | "handle" | undefined;
-  const bidRaw = metadata.bid;
-  if (!displayName || !listing || !listingKey || !listingType || !bidRaw) {
-    console.warn("webhook missing metadata", metadata);
-    return;
-  }
-  const bid = Number(bidRaw);
-  if (!Number.isFinite(bid) || bid < 5) {
-    console.warn("webhook bad bid", bidRaw);
+  const tier = getTier(metadata.tier);
+
+  if (!displayName || !listing || !listingKey || !listingType || !tier) {
+    console.warn("webhook missing or unknown tier metadata", metadata);
     return;
   }
 
-  const description =
-    (metadata.description || "").trim().slice(0, 140) || "Paid seat";
+  const description = (metadata.description || "").trim().slice(0, 140) || "Paid seat";
 
   await applyPaidSeat({
     displayName,
@@ -34,7 +28,7 @@ async function fulfillFromMetadata(
     listingType,
     logoUrl: metadata.logoUrl || undefined,
     description,
-    bid,
+    tier: tier.id,
     orderId,
     checkoutId,
   });
@@ -55,9 +49,7 @@ export const POST = Webhooks({
   },
   onCheckoutUpdated: async (payload) => {
     const checkout = payload.data;
-    if (checkout.status !== "succeeded" && checkout.status !== "confirmed") {
-      return;
-    }
+    if (checkout.status !== "succeeded" && checkout.status !== "confirmed") return;
     const meta = (checkout.metadata || {}) as Record<string, string>;
     await fulfillFromMetadata(meta, `checkout:${checkout.id}`, checkout.id);
   },
