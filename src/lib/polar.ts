@@ -1,3 +1,4 @@
+import { siteUrl } from "./site";
 import { Polar } from "@polar-sh/sdk";
 
 export function getPolarServer(): "sandbox" | "production" {
@@ -25,10 +26,7 @@ export function getPolarClient(): Polar {
 }
 
 export function getAppUrl(): string {
-  return (process.env.NEXT_PUBLIC_APP_URL || "http://127.0.0.1:3000").replace(
-    /\/$/,
-    "",
-  );
+  return siteUrl();
 }
 
 export function getProductId(): string {

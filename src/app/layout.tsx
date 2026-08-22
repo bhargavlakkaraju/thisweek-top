@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import { DM_Sans, Geist_Mono } from "next/font/google";
 import { Footer } from "@/components/Footer";
 import { Nav } from "@/components/Nav";
+import { siteUrl } from "@/lib/site";
 import "./globals.css";
 
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans", display: "swap" });
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono", display: "swap" });
 
-const base = process.env.NEXT_PUBLIC_APP_URL || "https://111111.live";
+const base = siteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(base),
