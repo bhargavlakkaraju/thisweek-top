@@ -131,15 +131,20 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     const message = err instanceof Error ? err.message : "Checkout failed.";
     console.error("checkout error", err);
+    // Public copy stays public-appropriate. The operational detail belongs in
+    // the logs and /api/health, not in a message shown to a would-be customer.
+    const notConfigured =
+      message.includes("POLAR_") || message.includes("not set");
+
     return NextResponse.json(
       {
-        error:
-          message.includes("POLAR_") || message.includes("not set")
-            ? "Payments are not configured yet. Set the Polar env vars."
-            : "Could not start checkout. Try again.",
+        error: notConfigured
+          ? "Seats aren't open for purchase just yet. Payments go live shortly - check back very soon."
+          : "We couldn't start that checkout. Give it another go in a moment.",
+        code: notConfigured ? "payments_not_live" : "checkout_failed",
         detail: process.env.NODE_ENV === "development" ? message : undefined,
       },
-      { status: 502 },
+      { status: notConfigured ? 503 : 502 },
     );
   }
 }
