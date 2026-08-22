@@ -24,12 +24,16 @@ async function fulfillFromMetadata(
     return;
   }
 
+  const description =
+    (metadata.description || "").trim().slice(0, 140) || "Paid seat";
+
   await applyPaidSeat({
     displayName,
     listing,
     listingKey,
     listingType,
     logoUrl: metadata.logoUrl || undefined,
+    description,
     bid,
     orderId,
     checkoutId,

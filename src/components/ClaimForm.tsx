@@ -1,12 +1,16 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { BoardTable, type PublicRow } from "./BoardTable";
+import type { ActivityEvent, PublicRow } from "@/lib/types";
+import { ActivityFeed } from "./ActivityFeed";
+import { ClaimBar } from "./ClaimBar";
+import { ListingCards } from "./ListingCards";
 
 type Prefill = Partial<{
   displayName: string;
   listing: string;
   logoUrl: string;
+  description: string;
   bid: number;
 }>;
 
@@ -20,12 +24,16 @@ export function ClaimForm({
   const [displayName, setDisplayName] = useState(prefill?.displayName || "");
   const [listing, setListing] = useState(prefill?.listing || "");
   const [logoUrl, setLogoUrl] = useState(prefill?.logoUrl || "");
+  const [description, setDescription] = useState(prefill?.description || "");
   const [bid, setBid] = useState(String(prefill?.bid ?? claimOnePrice ?? 5));
   const [error, setError] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const bidNum = useMemo(() => Number(bid), [bid]);
+  const descLen = description.length;
+  const counterClass =
+    descLen > 140 ? "over" : descLen >= 120 ? "warn" : "";
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -40,6 +48,7 @@ export function ClaimForm({
           displayName,
           listing,
           logoUrl: logoUrl || undefined,
+          description,
           bid: bidNum,
         }),
       });
@@ -63,9 +72,13 @@ export function ClaimForm({
   }
 
   return (
-    <form className="form" id="claim" onSubmit={onSubmit}>
+    <form className="form claim-panel-form" id="claim" onSubmit={onSubmit}>
       <p className="claim-title">
-        {prefill ? "Raise your listing" : `Claim #1 for $${claimOnePrice}`}
+        {prefill?.listing ? "Raise your listing" : "Place a bid"}
+      </p>
+      <p className="hint" style={{ marginTop: "-0.35rem" }}>
+        New listing min $5. Taking #1 needs at least current top + $5.
+        Description is required.
       </p>
       <label>
         Display name
@@ -93,6 +106,20 @@ export function ClaimForm({
           onChange={(e) => setLogoUrl(e.target.value)}
           placeholder="https://..."
         />
+      </label>
+      <label>
+        One-line description
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value.slice(0, 140))}
+          placeholder="What you ship in one line (max 140 chars)"
+          required
+          maxLength={140}
+          rows={3}
+        />
+        <span className={`counter ${counterClass}`.trim()}>
+          {descLen}/140
+        </span>
       </label>
       <label>
         Bid (USD, whole dollars)
@@ -123,43 +150,104 @@ export function ClaimForm({
 export function HomeBoard({
   initialEntries,
   claimOnePrice,
+  activity,
+  resetsAt,
+  visitorStub,
+  weekLabel,
+  topLabel,
 }: {
   initialEntries: PublicRow[];
   claimOnePrice: number;
+  activity: ActivityEvent[];
+  resetsAt: string;
+  visitorStub: number;
+  weekLabel: string;
+  topLabel: string;
 }) {
   const [raisePrefill, setRaisePrefill] = useState<Prefill | undefined>();
 
+  function scrollToClaim(prefill?: Prefill) {
+    if (prefill) setRaisePrefill(prefill);
+    requestAnimationFrame(() => {
+      const el = document.getElementById("claim");
+      el?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
   return (
-    <div className="grid-2">
-      <section className="panel">
-        <div className="panel-head">
-          <h2>This week&apos;s board</h2>
-          <span className="hint">Paid seats only</span>
+    <>
+      <ClaimBar
+        floor={claimOnePrice}
+        resetsAt={resetsAt}
+        onClaim={(price) => {
+          scrollToClaim({ bid: price });
+        }}
+      />
+
+      <div className="container home-main">
+        <section className="hero hero-compact">
+          <h1>
+            Claim #1 for <em>${claimOnePrice}</em>
+          </h1>
+          <p className="lead">
+            Pay to stand above everyone else this week. Rank is the bid. Board
+            resets Monday 00:00 UTC.
+          </p>
+          <div className="meta-row">
+            <span className="dot-live">{topLabel}</span>
+            <span className="visitors">
+              {visitorStub.toLocaleString("en-US")} visitors this week
+            </span>
+            <span>{weekLabel}</span>
+          </div>
+        </section>
+
+        <div className="main-grid" id="board">
+          <section>
+            <div className="section-head">
+              <h2>This week&apos;s board</h2>
+              <span className="section-meta">
+                {initialEntries.length} listing
+                {initialEntries.length === 1 ? "" : "s"} · min $5
+              </span>
+            </div>
+            <ListingCards
+              entries={initialEntries}
+              onClaimRank={(row) => {
+                scrollToClaim({
+                  displayName: row.displayName,
+                  listing: row.listing,
+                  logoUrl: row.logoUrl || "",
+                  description: row.description || "",
+                  bid: row.claimThisRankPrice,
+                });
+              }}
+            />
+          </section>
+
+          <ActivityFeed activity={activity} resetsAt={resetsAt} />
         </div>
-        <BoardTable
-          entries={initialEntries}
-          onRaise={(row: PublicRow) => {
-            setRaisePrefill({
-              displayName: row.displayName,
-              listing: row.listing,
-              logoUrl: row.logoUrl || "",
-              bid: row.bid + 5,
-            });
-            const el = document.getElementById("claim");
-            el?.scrollIntoView({ behavior: "smooth", block: "start" });
-          }}
-        />
-      </section>
-      <section className="panel">
-        <div className="panel-head">
-          <h2>{raisePrefill ? "Raise" : "Claim a seat"}</h2>
+
+        <section className="claim-section">
+          <div className="claim-panel">
+            <div className="panel-head" style={{ border: "none", padding: 0, background: "transparent", marginBottom: "0.5rem" }}>
+              <h2 style={{ textTransform: "none", letterSpacing: "-0.03em", fontSize: "1.15rem", color: "var(--text)" }}>
+                {raisePrefill ? "Raise" : "Claim a seat"}
+              </h2>
+            </div>
+            <ClaimForm
+              key={JSON.stringify(raisePrefill) + String(claimOnePrice)}
+              claimOnePrice={claimOnePrice}
+              prefill={raisePrefill}
+            />
+          </div>
+        </section>
+
+        <div className="honesty" id="rules">
+          Paid status. Not a quality score. No traffic promises. No forever
+          rank. Board clears Monday 00:00 UTC.
         </div>
-        <ClaimForm
-          key={JSON.stringify(raisePrefill) + String(claimOnePrice)}
-          claimOnePrice={claimOnePrice}
-          prefill={raisePrefill}
-        />
-      </section>
-    </div>
+      </div>
+    </>
   );
 }

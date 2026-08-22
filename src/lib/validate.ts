@@ -188,3 +188,17 @@ export function validateBidAmount(bid: unknown): { ok: true; bid: number } | { o
   }
   return { ok: true, bid };
 }
+
+const MAX_DESCRIPTION = 140;
+
+export function validateDescription(raw: string): { ok: true; description: string } | { ok: false; error: string } {
+  const d = (raw || "").trim();
+  if (!d) return { ok: false, error: "Description is required." };
+  if (d.length > MAX_DESCRIPTION) {
+    return { ok: false, error: `Description must be ${MAX_DESCRIPTION} characters or fewer.` };
+  }
+  if (NSFW_HINTS.some((re) => re.test(d))) {
+    return { ok: false, error: "NSFW / adult listings are banned." };
+  }
+  return { ok: true, description: d };
+}

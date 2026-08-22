@@ -1,0 +1,198 @@
+{
+  "title": "outbid.lol",
+  "bodyBg": "lab(99.4319 0.22465 1.50431)",
+  "buttons": [
+    {
+      "text": "outbid.lol",
+      "bg": "rgba(0, 0, 0, 0)",
+      "color": "lab(15.3197 0.641525 1.78666)",
+      "pad": "0px",
+      "h": 33
+    },
+    {
+      "text": "Leaderboard",
+      "bg": "rgba(0, 0, 0, 0)",
+      "color": "lab(15.3197 0.641525 1.78666)",
+      "pad": "0px",
+      "h": 18
+    },
+    {
+      "text": "Categories",
+      "bg": "rgba(0, 0, 0, 0)",
+      "color": "lab(41.9992 1.28707 3.57607)",
+      "pad": "0px",
+      "h": 18
+    },
+    {
+      "text": "About",
+      "bg": "rgba(0, 0, 0, 0)",
+      "color": "lab(41.9992 1.28707 3.57607)",
+      "pad": "0px",
+      "h": 18
+    },
+    {
+      "text": "Rules",
+      "bg": "rgba(0, 0, 0, 0)",
+      "color": "lab(41.9992 1.28707 3.57607)",
+      "pad": "0px",
+      "h": 18
+    },
+    {
+      "text": "250 online\n · 1,027,462 visitors since launch · see stats→",
+      "bg": "lab(95.9435 0.683308 2.15881)",
+      "color": "lab(41.9992 1.28707 3.57607)",
+      "pad": "6px 12px",
+      "h": 33
+    },
+    {
+      "text": "Had to switch my analytics provider 🥴 here is the traffic f",
+      "bg": "rgba(0, 0, 0, 0)",
+      "color": "oklab(0.27 0.00187018 0.00464204 / 0.5)",
+      "pad": "0px",
+      "h": 0
+    },
+    {
+      "text": "−",
+      "bg": "oklab(0.680005 0.122855 0.0860486 / 0.15)",
+      "color": "lab(61.6186 44.1656 37.4982)",
+      "pad": "0px",
+      "h": 24
+    },
+    {
+      "text": "+",
+      "bg": "oklab(0.680005 0.122855 0.0860486 / 0.15)",
+      "color": "lab(61.6186 44.1656 37.4982)",
+      "pad": "0px",
+      "h": 24
+    },
+    {
+      "text": "Choose a category",
+      "bg": "rgba(0, 0, 0, 0)",
+      "color": "lab(41.9992 1.28707 3.57607)",
+      "pad": "8px 12px",
+      "h": 44
+    },
+    {
+      "text": "Outbid",
+      "bg": "lab(61.6186 44.1656 37.4982)",
+      "color": "lab(100 0 0)",
+      "pad": "0px 20px",
+      "h": 44
+    },
+    {
+      "text": "All",
+      "bg": "lab(61.6186 44.1656 37.4982)",
+      "color": "lab(100 0 0)",
+      "pad": "0px 10px",
+      "h": 28
+    },
+    {
+      "text": "SEO & AI Visibility",
+      "bg": "lab(99.4319 0.22465 1.50431)",
+      "color": "lab(15.3197 0.641525 1.78666)",
+      "pad": "0px 10px",
+      "h": 28
+    },
+    {
+      "text": "AI Agents & Infrastructure",
+      "bg": "lab(99.4319 0.22465 1.50431)",
+      "color": "lab(15.3197 0.641525 1.78666)",
+      "pad": "0px 10px",
+      "h": 28
+    },
+    {
+      "text": "AI Media Generation",
+      "bg": "lab(99.4319 0.22465 1.50431)",
+      "color": "lab(15.3197 0.641525 1.78666)",
+      "pad": "0px 10px",
+      "h": 28
+    },
+    {
+      "text": "Marketing & Advertising",
+      "bg": "lab(99.4319 0.22465 1.50431)",
+      "color": "lab(15.3197 0.641525 1.78666)",
+      "pad": "0px 10px",
+      "h": 28
+    },
+    {
+      "text": "Developer Tools",
+      "bg": "lab(99.4319 0.22465 1.50431)",
+      "color": "lab(15.3197 0.641525 1.78666)",
+      "pad": "0px 10px",
+      "h": 28
+    },
+    {
+      "text": "Productivity & Personal Tools",
+      "bg": "lab(99.4319 0.22465 1.50431)",
+      "color": "lab(15.3197 0.641525 1.78666)",
+      "pad": "0px 10px",
+      "h": 28
+    },
+    {
+      "text": "People & Profiles",
+      "bg": "lab(99.4319 0.22465 1.50431)",
+      "color": "lab(15.3197 0.641525 1.78666)",
+      "pad": "0px 10px",
+      "h": 28
+    },
+    {
+      "text": "Design & Creative",
+      "bg": "lab(99.4319 0.22465 1.50431)",
+      "color": "lab(15.3197 0.641525 1.78666)",
+      "pad": "0px 10px",
+      "h": 28
+    },
+    {
+      "text": "Social Media & Creator Tools",
+      "bg": "lab(99.4319 0.22465 1.50431)",
+      "color": "lab(15.3197 0.641525 1.78666)",
+      "pad": "0px 10px",
+      "h": 28
+    },
+    {
+      "text": "Writing & Content",
+      "bg": "lab(99.4319 0.22465 1.50431)",
+      "color": "lab(15.3197 0.641525 1.78666)",
+      "pad": "0px 10px",
+      "h": 28
+    },
+    {
+      "text": "Sales & Lead Generation",
+      "bg": "lab(99.4319 0.22465 1.50431)",
+      "color": "lab(15.3197 0.641525 1.78666)",
+      "pad": "0px 10px",
+      "h": 28
+    },
+    {
+      "text": "Business, Finance & Legal",
+      "bg": "lab(99.4319 0.22465 1.50431)",
+      "color": "lab(15.3197 0.641525 1.78666)",
+      "pad": "0px 10px",
+      "h": 28
+    },
+    {
+      "text": "Games & Entertainment",
+      "bg": "lab(99.4319 0.22465 1.50431)",
+      "color": "lab(15.3197 0.641525 1.78666)",
+      "pad": "0px 10px",
+      "h": 28
+    }
+  ],
+  "cards": [
+    {
+      "class": "flex flex-col items-stretch gap-2 md:flex-row md:items-center",
+      "h": 44,
+      "w": 864,
+      "pad": "0px",
+      "text": "Choose a category Outbid"
+    },
+    {
+      "class": "flex h-full flex-col rounded-2xl bg-card px-4 pt-3.5 pb-1 shadow-[0_12px_50px_rg",
+      "h": 110,
+      "w": 864,
+      "pad": "16px 20px",
+      "text": "Latest activity trezio.app at #315 · $9 8 minutes ago billbored.lol at #722 · $5 18 minutes ago mobp"
+    }
+  ],
+  "bodyText": "outbid.lol\nLeaderboard\nCategories\nAbout\nRules\noutbid.lol\n250 online\n · 1,027,462 visitors since launch · see stats→\nClaim #1 for\n−\nAmount in dollars\n$\n+\n\nNew spots start at $5. Paying less than the #1 price still puts you on the board at whatever place that bid can take.\n\nChoose a category\nOutbid\n\nAlready on the list? Enter the same URL or @handle and up your bid.\n\nAll\nSEO & AI Visibility\nAI Agents & Infrastructure\nAI Media Generation\nMarketing & Advertising\nDeveloper Tools\nProductivity & Personal Tools\nPeople & Profiles\nDesign & Creative\nSocial Media & Creator Tools\nWriting & Content\nSales & Lead Generation\nBusiness, Finance & Legal\nGames & Entertainment\nEducation & Learning\nHealth, Fitness & Wellness\nEcommerce & Retail\nDirectories, Launch & Discovery\nHiring, Jobs & Careers\nAudio, Voice & Podcasting\nCrypto, Web3 & Investing\nAgencies, Studios & Services\nSecurity, Privacy & Compliance\nTravel, Local & Lifestyle\nMedia & News\nDomains & Web Assets\nLeaderboards & Attention Markets\nReal Estate & Property\nOther\n#1\n\njoni.ai\n\n$14,013\n\nJONI is your personal AI computer. Chat once and a team of AI agents and skills gets to work, with the right model picked for every job. None of the complexity.\n\n18 hours ago\nAI Agents & Infrastructure\n10120 clicks\n\nclaim this rank for $14,018\n#2\n\noutrank.so\n\n$13,005\n\nGet traffic and outrank competitors with Backlinks & SEO-optimized content while you sleep.\n\n18 hours ago\nSEO & AI Visibility\n10563 clicks\n\nclaim this rank for $13,006\n#3\n\norynth.dev\n\n$12,716\n\nDiscover early-stage products, support their creators, and invest in their coins. Orynth connects builders with communities who believe in them.\n\n19 hours ago\nCrypto, Web3 & Investing\n12120 clicks\n\nclaim this rank for $12,717\nLatest activity\n\ntrezio.app\n\nat #315 · $9\n\n8 minutes ago\n\nbillbored.lol\n\nat #722 · $5\n\n18 minutes ago\n\nmobpush.lol\n\nat #721 · $5\n\n22 minutes ago\n\nup-moon.com\n\nat #720 · $5\n\n22 minutes ago\n\nchatbid.lol\n\nat #216 · $20\n\n23 minutes ago\n\n#4\n\ncrowdreply.io\n\n$12,711\n\nGet your brand added to the pages ChatGPT, Gemini, and Perplexity already cite. CrowdReply runs the outreach. You approve placements and pay when they publish.\n\n19 hours ago\nSEO & AI Visibility\n5712 clicks\n\nclaim this rank for $12,712\n#5\n\ntrycomp.ai\n\n$10,000\n\nAutomate SOC 2, ISO 27001, HIPAA, and GDPR. 580+ integrations, 1,000+ companies, audit-ready in days, with audit and pentest included.\n\nyesterday\nSecurity, Privacy & Compliance\n12081 clicks\n\nclaim this rank for $10,001\n#6\n\nfuellog.ai\n\n$3,500\n\nSend a "
+}

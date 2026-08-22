@@ -23,3 +23,12 @@ Categories, forever rank, auth, refunds UI, INR/Razorpay, agency branding, traff
 
 ## Visual (locked 22 Aug)
 Match Outbid.lol: light cream + coral #e57255 + DM Sans. See OUTBID-RESTYLE.md. Not dark/mint/gold.
+
+## UI v1.1 (22 Aug 2026) - converting board
+Source of truth: OUTBID-BOARD-UI.md + html/board-v11.html
+- Listing CARDS (not table): rank · favicon · name/domain · description · $bid · time ago · Claim CTA
+- Sticky Claim #1 with +/- dollar control
+- Latest activity (last 8)
+- Visitor counter stub optional
+- description required max 140 on claim
+- Categories: NOT in this pass

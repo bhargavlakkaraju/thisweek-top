@@ -43,6 +43,7 @@ export type CheckoutMeta = {
   listingKey: string;
   listingType: "url" | "handle";
   logoUrl: string;
+  description: string;
   bid: string;
   chargeAmount: string;
   mode: "claim" | "raise";

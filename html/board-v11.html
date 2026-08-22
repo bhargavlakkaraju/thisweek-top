@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ThisWeek.top - Claim #1 for the week</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f7f5f1;
+    --surface: #fffdfa;
+    --surface-2: #ffffff;
+    --text: #282624;
+    --muted: #77726d;
+    --muted-2: #56514c;
+    --line: #e6e0da;
+    --accent: #e57255;
+    --accent-soft: #f8ebe6;
+    --accent-tint: #fff7f3;
+    --accent-border: #efc8bc;
+    --accent-fg: #ffffff;
+    --live: #50c05f;
+    --radius: 0.625rem;
+    --radius-xl: 1rem;
+    --font: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+    --mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    line-height: 1.45;
+    min-height: 100%;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--text); text-decoration: none; }
+  a:hover { text-decoration: underline; text-underline-offset: 2px; }
+  button, input { font: inherit; color: inherit; }
+
+  .wrap {
+    width: min(54rem, calc(100% - 2rem));
+    margin: 0 auto;
+  }
+
+  /* Header - thin */
+  .site-header {
+    height: 52px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--line);
+    background: rgba(255, 253, 250, 0.9);
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 40;
+  }
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 1rem;
+  }
+  .brand {
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    font-size: 1.1rem;
+    text-decoration: none !important;
+  }
+  .brand span { color: var(--accent); }
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    font-size: 0.88rem;
+    font-weight: 500;
+  }
+  .nav-links a { color: var(--muted-2); text-decoration: none; }
+  .nav-links a:hover { color: var(--text); }
+
+  /* Visitors pill */
+  .status-row {
+    display: flex;
+    justify-content: center;
+    padding: 0.85rem 0 0.35rem;
+  }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: #f0ebe4;
+    border-radius: 999px;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.8rem;
+    color: var(--muted-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .status-pill .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--live);
+    box-shadow: 0 0 0 3px rgba(80, 192, 95, 0.18);
+    flex-shrink: 0;
+  }
+  .status-pill a { color: var(--muted-2); font-weight: 500; }
+
+  /* Hero - Outbid style centered Claim #1 for − $PRICE + */
+  .hero {
+    text-align: center;
+    padding: 1.1rem 0 0.65rem;
+  }
+  .hero-claim {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem 0.65rem;
+    margin-bottom: 0.45rem;
+  }
+  .hero-claim .lead-text {
+    font-size: clamp(1.55rem, 3.4vw, 2.15rem);
+    font-weight: 700;
+    letter-spacing: -0.045em;
+    line-height: 1.1;
+  }
+  .price-stepper {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .price-stepper .step {
+    width: 1.55rem;
+    height: 1.55rem;
+    border-radius: 999px;
+    border: none;
+    background: rgba(229, 114, 85, 0.15);
+    color: var(--accent);
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+  }
+  .price-stepper .step:hover { background: rgba(229, 114, 85, 0.28); }
+  .price-stepper .step:disabled { opacity: 0.35; cursor: not-allowed; }
+  .price-stepper .big-price {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: clamp(1.7rem, 3.6vw, 2.35rem);
+    color: var(--accent);
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+    min-width: 4.5rem;
+    line-height: 1;
+  }
+  .hero-sub {
+    color: var(--accent);
+    font-size: 0.88rem;
+    max-width: 34rem;
+    margin: 0 auto 0.35rem;
+    opacity: 0.92;
+  }
+  .hero-reset {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .hero-reset strong {
+    font-family: var(--mono);
+    font-weight: 600;
+    color: var(--muted-2);
+  }
+
+  /* Inline claim strip */
+  .claim-strip {
+    padding: 0.75rem 0 1.1rem;
+  }
+  .claim-strip-inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+  .claim-input {
+    flex: 1 1 16rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 0 0.85rem;
+    min-height: 2.75rem;
+  }
+  .claim-input .globe {
+    color: var(--muted);
+    font-size: 0.95rem;
+    flex-shrink: 0;
+  }
+  .claim-input input {
+    border: none;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    font-size: 0.92rem;
+    padding: 0.65rem 0;
+  }
+  .claim-input input::placeholder { color: var(--muted); }
+  .btn-outbid {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent);
+    color: var(--accent-fg);
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 0 1.35rem;
+    min-height: 2.75rem;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    text-decoration: none !important;
+  }
+  .btn-outbid:hover { filter: brightness(1.05); }
+  .claim-note {
+    margin-top: 0.45rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  /* Featured top 3 cards */
+  .featured {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    padding-bottom: 0.85rem;
+  }
+  .feat-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-xl);
+    padding: 0.95rem 1.05rem 0.75rem;
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    gap: 0.7rem 0.85rem;
+    align-items: start;
+  }
+  .feat-card.is-top {
+    background: linear-gradient(180deg, #fffdfa 0%, var(--accent-tint) 100%);
+    border-color: var(--accent-border);
+  }
+  .rank-badge {
+    width: 2.35rem;
+    height: 2.35rem;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 0.82rem;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    letter-spacing: -0.02em;
+  }
+  .feat-card:not(.is-top) .rank-badge {
+    background: #ece7e1;
+    color: var(--muted-2);
+  }
+  .fav-round {
+    width: 2.35rem;
+    height: 2.35rem;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: #f0ebe4;
+    object-fit: cover;
+    display: block;
+  }
+  .fav-fallback {
+    width: 2.35rem;
+    height: 2.35rem;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #fff;
+  }
+  .feat-body { min-width: 0; grid-column: 3; }
+  .feat-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.25rem;
+  }
+  .feat-name {
+    font-weight: 700;
+    font-size: 1.02rem;
+    letter-spacing: -0.02em;
+  }
+  .feat-bid {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 1.35rem;
+    color: var(--accent);
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .feat-desc {
+    font-size: 0.86rem;
+    color: var(--muted-2);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.4;
+    margin-bottom: 0.4rem;
+  }
+  .feat-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.75rem;
+    font-size: 0.76rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .feat-meta .clicks::before {
+    content: "";
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-right: 0.35rem;
+    vertical-align: middle;
+  }
+  .feat-claim {
+    grid-column: 1 / -1;
+    margin-top: 0.15rem;
+    padding-top: 0.45rem;
+    border-top: 1px solid rgba(230, 224, 218, 0.7);
+  }
+  .claim-link {
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 0.86rem;
+    text-decoration: none;
+  }
+  .claim-link:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+  /* Bid sits in col 4 on desktop - restructure featured */
+  @media (min-width: 640px) {
+    .feat-card {
+      grid-template-columns: auto auto minmax(0, 1fr) auto;
+      grid-template-areas:
+        "rank fav body bid"
+        "claim claim claim claim";
+    }
+    .feat-card .rank-badge { grid-area: rank; }
+    .feat-card .fav-wrap { grid-area: fav; }
+    .feat-body { grid-area: body; grid-column: auto; }
+    .feat-bid-col { grid-area: bid; align-self: start; padding-top: 0.1rem; }
+    .feat-claim { grid-area: claim; }
+    .feat-top { display: block; margin-bottom: 0.2rem; }
+    .feat-top .feat-bid { display: none; }
+  }
+  @media (max-width: 639px) {
+    .feat-card {
+      grid-template-columns: auto auto minmax(0, 1fr);
+    }
+    .feat-bid-col { display: none; }
+    .feat-body { grid-column: 3; }
+    .feat-claim { grid-column: 1 / -1; }
+  }
+
+  /* Latest activity - horizontal pills BETWEEN #3 and #4 */
+  .activity-block {
+    margin: 0.35rem 0 0.95rem;
+  }
+  .activity-head {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.45rem;
+  }
+  .activity-head .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .activity-scroller {
+    display: flex;
+    gap: 0.55rem;
+    overflow-x: auto;
+    padding: 0.65rem 0.75rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-xl);
+    box-shadow: 0 8px 28px rgba(40, 38, 36, 0.04);
+    scrollbar-width: thin;
+  }
+  .act-pill {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 11.5rem;
+    padding-right: 0.75rem;
+    border-right: 1px solid var(--line);
+  }
+  .act-pill:last-child { border-right: none; padding-right: 0; }
+  .act-pill .av {
+    width: 1.65rem;
+    height: 1.65rem;
+    border-radius: 999px;
+    background: #ece7e1;
+    display: grid;
+    place-items: center;
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: var(--muted-2);
+    flex-shrink: 0;
+  }
+  .act-pill .who {
+    font-weight: 650;
+    font-size: 0.82rem;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+  .act-pill .detail {
+    font-size: 0.74rem;
+    color: var(--muted-2);
+    white-space: nowrap;
+  }
+  .act-pill .when {
+    font-size: 0.7rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* #4+ denser list rows */
+  .board-list {
+    border-top: 1px solid var(--line);
+    margin-bottom: 2rem;
+  }
+  .list-row {
+    display: grid;
+    grid-template-columns: 2.1rem 1.85rem minmax(0, 1fr) auto;
+    gap: 0.55rem 0.7rem;
+    align-items: start;
+    padding: 0.7rem 0.15rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .list-rank {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--muted-2);
+    padding-top: 0.35rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .list-fav {
+    width: 1.85rem;
+    height: 1.85rem;
+    border-radius: 0.45rem;
+    border: 1px solid var(--line);
+    background: #f0ebe4;
+    object-fit: cover;
+    margin-top: 0.15rem;
+  }
+  .list-fav-fallback {
+    width: 1.85rem;
+    height: 1.85rem;
+    border-radius: 0.45rem;
+    display: grid;
+    place-items: center;
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: #fff;
+    margin-top: 0.15rem;
+  }
+  .list-body { min-width: 0; }
+  .list-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.12rem;
+  }
+  .list-name {
+    font-weight: 650;
+    font-size: 0.95rem;
+    letter-spacing: -0.02em;
+  }
+  .list-bid {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--accent);
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .list-desc {
+    font-size: 0.82rem;
+    color: var(--muted-2);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.35;
+    margin-bottom: 0.28rem;
+  }
+  .list-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.7rem;
+    font-size: 0.74rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .list-meta .clicks::before {
+    content: "";
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-right: 0.3rem;
+    vertical-align: middle;
+  }
+  .list-claim {
+    grid-column: 1 / -1;
+    margin-top: -0.15rem;
+    padding-bottom: 0.1rem;
+  }
+  .list-claim .claim-link { font-size: 0.82rem; }
+
+  @media (min-width: 720px) {
+    .list-row {
+      grid-template-columns: 2.2rem 1.9rem minmax(0, 1fr) auto;
+      grid-template-areas:
+        "rank fav body bid"
+        ". . claim claim";
+    }
+    .list-rank { grid-area: rank; }
+    .list-fav-wrap { grid-area: fav; }
+    .list-body { grid-area: body; }
+    .list-bid-col { grid-area: bid; }
+    .list-claim { grid-area: claim; }
+    .list-top .list-bid { display: none; }
+  }
+  @media (max-width: 719px) {
+    .list-bid-col { display: none; }
+  }
+
+  /* Quiet form + honesty */
+  .claim-section {
+    padding: 0.25rem 0 1.75rem;
+  }
+  .claim-panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-xl);
+    padding: 1rem 1.1rem;
+    max-width: 36rem;
+  }
+  .claim-panel h2 {
+    font-size: 1.05rem;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.25rem;
+  }
+  .claim-panel .hint {
+    color: var(--muted);
+    font-size: 0.82rem;
+    margin-bottom: 0.85rem;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.28rem;
+    margin-bottom: 0.7rem;
+  }
+  .field label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--muted-2);
+  }
+  .field label .req { color: var(--accent); }
+  .field input, .field textarea {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    padding: 0.55rem 0.7rem;
+    outline: none;
+    font-size: 0.9rem;
+  }
+  .field input:focus, .field textarea:focus {
+    border-color: var(--accent-border);
+    box-shadow: 0 0 0 3px rgba(229, 114, 85, 0.12);
+  }
+  .field textarea {
+    min-height: 4.5rem;
+    resize: vertical;
+  }
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 8rem;
+    gap: 0.65rem;
+  }
+  @media (max-width: 560px) {
+    .field-row { grid-template-columns: 1fr; }
+  }
+  .counter {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-align: right;
+  }
+  .btn-solid {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0.55rem 1rem;
+    border-radius: var(--radius);
+    border: none;
+    cursor: pointer;
+    height: 2.45rem;
+    width: 100%;
+  }
+
+  .honesty {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.5;
+    margin: 0 auto 1.75rem;
+    max-width: 36rem;
+  }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 1rem 0 1.5rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  footer .foot {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  footer a { color: var(--muted-2); }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap nav">
+    <a class="brand" href="#">ThisWeek<span>.top</span></a>
+    <div class="nav-links">
+      <a href="#board">Board</a>
+      <a href="#claim">Claim</a>
+      <a href="#rules">Rules</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="status-row">
+      <div class="status-pill">
+        <span class="dot" aria-hidden="true"></span>
+        <span>142 online · 1,204 visitors this week · <a href="#board">see board →</a></span>
+      </div>
+    </div>
+
+    <section class="hero">
+      <div class="hero-claim">
+        <span class="lead-text">Claim #1 for</span>
+        <div class="price-stepper" aria-label="Bid amount stepper">
+          <button type="button" class="step" id="bid-minus" aria-label="Decrease bid">−</button>
+          <span class="big-price" id="claim-price">$125</span>
+          <button type="button" class="step" id="bid-plus" aria-label="Increase bid">+</button>
+        </div>
+      </div>
+      <p class="hero-sub">New spots start at $5. Paying less than the #1 price still puts you on the board at whatever place that bid can take.</p>
+      <p class="hero-reset">Resets Monday 00:00 UTC · <strong id="bar-countdown">1d 4h 14m</strong></p>
+    </section>
+
+    <section class="claim-strip" id="claim-top">
+      <form class="claim-strip-inner" onsubmit="document.getElementById('claim').scrollIntoView({behavior:'smooth'}); return false;">
+        <label class="claim-input">
+          <span class="globe" aria-hidden="true">◎</span>
+          <input type="text" id="quick-listing" placeholder="Your product URL or @handle" autocomplete="off" />
+        </label>
+        <button type="submit" class="btn-outbid">Claim</button>
+      </form>
+      <p class="claim-note">Already on the list? Enter the same URL or @handle and raise your bid. Description required on the full form below.</p>
+    </section>
+
+    <div id="board">
+      <div class="featured" id="featured"></div>
+      <div class="activity-block">
+        <div class="activity-head"><span class="dot"></span> Latest activity</div>
+        <div class="activity-scroller" id="activity"></div>
+      </div>
+      <div class="board-list" id="list"></div>
+    </div>
+
+    <section class="claim-section" id="claim">
+      <div class="claim-panel">
+        <h2>Place a bid</h2>
+        <p class="hint">New listing min $5. Taking #1 needs at least current top + $5. Description is required.</p>
+        <form id="claim-form" onsubmit="return false;">
+          <div class="field">
+            <label for="name">Display name <span class="req">*</span></label>
+            <input id="name" name="name" type="text" placeholder="Acme" required maxlength="60" />
+          </div>
+          <div class="field">
+            <label for="listing">Website or @handle <span class="req">*</span></label>
+            <input id="listing" name="listing" type="text" placeholder="https://acme.com or @acme" required />
+          </div>
+          <div class="field">
+            <label for="logo">Logo URL <span style="font-weight:500;color:var(--muted)">(optional)</span></label>
+            <input id="logo" name="logo" type="url" placeholder="https://..." />
+          </div>
+          <div class="field">
+            <label for="description">One-line description <span class="req">*</span></label>
+            <textarea id="description" name="description" maxlength="140" required placeholder="What you ship in one line (max 140 chars)"></textarea>
+            <div class="counter" id="desc-counter">0/140</div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="bid">Bid (USD) <span class="req">*</span></label>
+              <input id="bid" name="bid" type="number" min="5" step="1" value="125" required />
+            </div>
+            <div class="field" style="justify-content:flex-end;">
+              <label>&nbsp;</label>
+              <button class="btn-solid" type="submit">Continue to pay</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <div class="honesty" id="rules">
+      Paid status. Not a quality score. No traffic promises. No forever rank. Board clears Monday 00:00 UTC.
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span>ThisWeek.top · weekly pay-to-rank board</span>
+    <span>
+      <a href="#rules">Rules</a> ·
+      <a href="#">About</a> ·
+      <a href="#">Privacy</a>
+    </span>
+  </div>
+</footer>
+
+<script>
+  const WEEK_TOP = 120;
+  const FLOOR = Math.max(5, WEEK_TOP + 5);
+  let claimPrice = FLOOR;
+
+  const listings = [
+    { rank: 1, name: "Linear", listing: "linear.app", domain: "linear.app", desc: "Issue tracking built for high-speed product teams that ship every week.", bid: 120, ago: "2 hours ago", clicks: 1842, color: "#5E6AD2" },
+    { rank: 2, name: "Resend", listing: "resend.com", domain: "resend.com", desc: "Email API for developers. Simple REST, React email, and deliverability that works.", bid: 95, ago: "4 hours ago", clicks: 1204, color: "#000000" },
+    { rank: 3, name: "Cursor", listing: "cursor.com", domain: "cursor.com", desc: "AI code editor that knows your repo. Pair program with models that can edit files.", bid: 80, ago: "6 hours ago", clicks: 980, color: "#F54E00" },
+    { rank: 4, name: "Raycast", listing: "raycast.com", domain: "raycast.com", desc: "Launcher that replaces Spotlight. Extensions, AI, and shortcuts for Mac power users.", bid: 65, ago: "9 hours ago", clicks: 640, color: "#FF6363" },
+    { rank: 5, name: "Cal.com", listing: "cal.com", domain: "cal.com", desc: "Open scheduling infrastructure. Bookings, availability, and calendars without the tax.", bid: 50, ago: "11 hours ago", clicks: 512, color: "#292929" },
+    { rank: 6, name: "Dub", listing: "dub.co", domain: "dub.co", desc: "Link attribution for modern marketing teams. Short links with real conversion data.", bid: 40, ago: "14 hours ago", clicks: 388, color: "#1F1F23" },
+    { rank: 7, name: "t3.gg", listing: "@t3dotgg", domain: "x.com", desc: "Theo builds in public - TypeScript, Next.js, and opinions about shipping software.", bid: 30, ago: "18 hours ago", clicks: 290, color: "#111111" },
+    { rank: 8, name: "Supabase", listing: "supabase.com", domain: "supabase.com", desc: "Postgres backend with auth, storage, and realtime. Open source Firebase alternative.", bid: 25, ago: "1 day ago", clicks: 220, color: "#3ECF8E" },
+    { rank: 9, name: "Loom", listing: "loom.com", domain: "loom.com", desc: "Async video messages for work. Record once, share a link, skip the meeting.", bid: 15, ago: "1 day ago", clicks: 150, color: "#625DF5" }
+  ];
+
+  const activity = [
+    { who: "Linear", what: "at #1 · $120", when: "2 hours ago", color: "#5E6AD2" },
+    { who: "Resend", what: "at #2 · $95", when: "4 hours ago", color: "#000000" },
+    { who: "Cursor", what: "at #3 · $80", when: "6 hours ago", color: "#F54E00" },
+    { who: "Raycast", what: "at #4 · $65", when: "9 hours ago", color: "#FF6363" },
+    { who: "Cal.com", what: "at #5 · $50", when: "11 hours ago", color: "#292929" },
+    { who: "Dub", what: "at #6 · $40", when: "14 hours ago", color: "#1F1F23" },
+    { who: "t3.gg", what: "at #7 · $30", when: "18 hours ago", color: "#111111" },
+    { who: "Supabase", what: "at #8 · $25", when: "1 day ago", color: "#3ECF8E" }
+  ];
+
+  function faviconUrl(domain) {
+    return "https://www.google.com/s2/favicons?domain=" + encodeURIComponent(domain) + "&sz=64";
+  }
+
+  function favBlock(item, round) {
+    const cls = round ? "fav-round" : "list-fav";
+    const fb = round ? "fav-fallback" : "list-fav-fallback";
+    const wrap = round ? "fav-wrap" : "list-fav-wrap";
+    return (
+      '<div class="' + wrap + '">' +
+        '<img class="' + cls + '" src="' + faviconUrl(item.domain) + '" alt="" ' +
+          'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'" />' +
+        '<div class="' + fb + '" style="display:none;background:' + item.color + '">' +
+          item.name.slice(0, 2).toUpperCase() +
+        "</div>" +
+      "</div>"
+    );
+  }
+
+  function renderFeatured() {
+    const top = listings.filter((l) => l.rank <= 3);
+    document.getElementById("featured").innerHTML = top.map((item) => {
+      const next = item.bid + 5;
+      const isTop = item.rank <= 2;
+      return (
+        '<article class="feat-card' + (isTop ? " is-top" : "") + '">' +
+          '<div class="rank-badge">#' + item.rank + "</div>" +
+          favBlock(item, true) +
+          '<div class="feat-body">' +
+            '<div class="feat-top">' +
+              '<div class="feat-name">' + item.name + "</div>" +
+              '<div class="feat-bid">$' + item.bid.toLocaleString() + "</div>" +
+            "</div>" +
+            '<div class="feat-desc">' + item.desc + "</div>" +
+            '<div class="feat-meta">' +
+              "<span>" + item.ago + "</span>" +
+              '<span class="clicks">' + item.clicks.toLocaleString() + " clicks</span>" +
+            "</div>" +
+          "</div>" +
+          '<div class="feat-bid-col"><div class="feat-bid">$' + item.bid.toLocaleString() + "</div></div>" +
+          '<div class="feat-claim">' +
+            '<a class="claim-link" href="#claim" data-next="' + next + '">claim this rank for $' + next.toLocaleString() + "</a>" +
+          "</div>" +
+        "</article>"
+      );
+    }).join("");
+  }
+
+  function renderList() {
+    const rest = listings.filter((l) => l.rank >= 4);
+    document.getElementById("list").innerHTML = rest.map((item) => {
+      const next = item.bid + 5;
+      return (
+        '<article class="list-row">' +
+          '<div class="list-rank">#' + item.rank + "</div>" +
+          favBlock(item, false) +
+          '<div class="list-body">' +
+            '<div class="list-top">' +
+              '<div class="list-name">' + item.name + "</div>" +
+              '<div class="list-bid">$' + item.bid.toLocaleString() + "</div>" +
+            "</div>" +
+            '<div class="list-desc">' + item.desc + "</div>" +
+            '<div class="list-meta">' +
+              "<span>" + item.ago + "</span>" +
+              '<span class="clicks">' + item.clicks.toLocaleString() + " clicks</span>" +
+            "</div>" +
+          "</div>" +
+          '<div class="list-bid-col"><div class="list-bid">$' + item.bid.toLocaleString() + "</div></div>" +
+          '<div class="list-claim">' +
+            '<a class="claim-link" href="#claim" data-next="' + next + '">claim this rank for $' + next.toLocaleString() + "</a>" +
+          "</div>" +
+        "</article>"
+      );
+    }).join("");
+  }
+
+  function renderActivity() {
+    document.getElementById("activity").innerHTML = activity.map((a) => (
+      '<div class="act-pill">' +
+        '<div class="av" style="background:' + a.color + ';color:#fff">' + a.who.slice(0, 1).toUpperCase() + "</div>" +
+        "<div>" +
+          '<div class="who">' + a.who + "</div>" +
+          '<div class="detail">' + a.what + "</div>" +
+          '<div class="when">' + a.when + "</div>" +
+        "</div>" +
+      "</div>"
+    )).join("");
+  }
+
+  function syncClaimUI() {
+    const label = "$" + claimPrice;
+    document.getElementById("claim-price").textContent = label;
+    const bidInput = document.getElementById("bid");
+    if (bidInput) bidInput.value = String(claimPrice);
+    document.getElementById("bid-minus").disabled = claimPrice <= FLOOR;
+  }
+
+  document.getElementById("bid-minus").addEventListener("click", () => {
+    if (claimPrice > FLOOR) { claimPrice -= 1; syncClaimUI(); }
+  });
+  document.getElementById("bid-plus").addEventListener("click", () => {
+    claimPrice += 1; syncClaimUI();
+  });
+
+  const desc = document.getElementById("description");
+  const counter = document.getElementById("desc-counter");
+  desc.addEventListener("input", () => {
+    const n = desc.value.length;
+    counter.textContent = n + "/140";
+  });
+
+  document.getElementById("quick-listing").addEventListener("change", (e) => {
+    const listing = document.getElementById("listing");
+    if (listing && e.target.value) listing.value = e.target.value;
+  });
+
+  function nextMondayUTC(from = new Date()) {
+    const t = new Date(from.getTime());
+    const next = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate(), 0, 0, 0, 0));
+    const dow = next.getUTCDay();
+    let days = (1 - dow + 7) % 7;
+    if (days === 0 && from >= next) days = 7;
+    next.setUTCDate(next.getUTCDate() + days);
+    return next;
+  }
+
+  function formatCountdownShort(ms) {
+    if (ms < 0) ms = 0;
+    const s = Math.floor(ms / 1000);
+    const days = Math.floor(s / 86400);
+    const hours = Math.floor((s % 86400) / 3600);
+    const mins = Math.floor((s % 3600) / 60);
+    return days + "d " + hours + "h " + mins + "m";
+  }
+
+  function tickCountdown() {
+    const ms = nextMondayUTC().getTime() - Date.now();
+    document.getElementById("bar-countdown").textContent = formatCountdownShort(ms);
+  }
+
+  renderFeatured();
+  renderList();
+  renderActivity();
+  syncClaimUI();
+  tickCountdown();
+  setInterval(tickCountdown, 1000);
+</script>
+</body>
+</html>

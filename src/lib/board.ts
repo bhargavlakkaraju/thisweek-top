@@ -1,11 +1,13 @@
 import { randomUUID } from "crypto";
 import { get, put } from "@vercel/blob";
 import { MIN_BID, TOP_BUMP } from "./constants";
-import type { BoardEntry, BoardState } from "./types";
+import { resolveFaviconUrl } from "./favicon";
+import type { ActivityEvent, BoardEntry, BoardState, PublicRow } from "./types";
 import { currentWeekId, nextMondayUtc } from "./week";
 
 const BOARD_PATH = "thisweek/board.json";
 const PROCESSED_PATH = "thisweek/processed-orders.json";
+const DEFAULT_DESCRIPTION = "Paid seat";
 
 async function readJsonBlob<T>(pathname: string): Promise<T | null> {
   try {
@@ -29,8 +31,24 @@ async function writeJsonBlob(pathname: string, data: unknown): Promise<void> {
   });
 }
 
+function normalizeEntry(e: BoardEntry): BoardEntry {
+  return {
+    ...e,
+    description:
+      typeof e.description === "string" && e.description.trim()
+        ? e.description.trim().slice(0, 140)
+        : DEFAULT_DESCRIPTION,
+    clicks: typeof e.clicks === "number" ? e.clicks : 0,
+  };
+}
+
 function emptyState(weekId: string = currentWeekId()): BoardState {
-  return { weekId, entries: [], updatedAt: new Date().toISOString() };
+  return {
+    weekId,
+    entries: [],
+    activity: [],
+    updatedAt: new Date().toISOString(),
+  };
 }
 
 /** On every read: if stored weekId != current week, clear seats (weekly reset). */
@@ -47,13 +65,18 @@ export async function readBoard(): Promise<BoardState> {
     await writeBoard(rotated);
     return rotated;
   }
-  return parsed;
+  return {
+    ...parsed,
+    entries: parsed.entries.map(normalizeEntry),
+    activity: Array.isArray(parsed.activity) ? parsed.activity : [],
+  };
 }
 
 export async function writeBoard(state: BoardState): Promise<void> {
   const next: BoardState = {
     weekId: state.weekId || currentWeekId(),
-    entries: state.entries,
+    entries: state.entries.map(normalizeEntry),
+    activity: Array.isArray(state.activity) ? state.activity.slice(0, 24) : [],
     updatedAt: new Date().toISOString(),
   };
   await writeJsonBlob(BOARD_PATH, next);
@@ -94,6 +117,10 @@ export function claimPriceForTop(entries: BoardEntry[]): number {
   return top === 0 ? MIN_BID : top + TOP_BUMP;
 }
 
+export function claimPriceForSeat(bid: number): number {
+  return bid + TOP_BUMP;
+}
+
 export function findByListingKey(
   entries: BoardEntry[],
   listingKey: string,
@@ -107,10 +134,20 @@ export type SeatPayload = {
   listingKey: string;
   listingType: "url" | "handle";
   logoUrl?: string;
+  description: string;
   bid: number;
   orderId: string;
   checkoutId?: string;
 };
+
+function pushActivity(
+  state: BoardState,
+  event: Omit<ActivityEvent, "id">,
+): void {
+  const next: ActivityEvent = { ...event, id: randomUUID() };
+  const prev = Array.isArray(state.activity) ? state.activity : [];
+  state.activity = [next, ...prev].slice(0, 24);
+}
 
 export async function applyPaidSeat(payload: SeatPayload): Promise<BoardEntry> {
   const isNew = await markProcessed(payload.orderId);
@@ -122,19 +159,24 @@ export async function applyPaidSeat(payload: SeatPayload): Promise<BoardEntry> {
 
   const state = await readBoard();
   const now = new Date().toISOString();
+  const description =
+    (payload.description || "").trim().slice(0, 140) || DEFAULT_DESCRIPTION;
   const existingIdx = state.entries.findIndex(
     (e) => e.listingKey === payload.listingKey && e.paid,
   );
 
   let entry: BoardEntry;
+  let kind: ActivityEvent["kind"] = "bid";
   if (existingIdx >= 0) {
     const prev = state.entries[existingIdx];
+    kind = "raise";
     entry = {
       ...prev,
       displayName: payload.displayName,
       listing: payload.listing,
       listingType: payload.listingType,
       logoUrl: payload.logoUrl || prev.logoUrl,
+      description,
       bid: payload.bid,
       paid: true,
       updatedAt: now,
@@ -153,15 +195,29 @@ export async function applyPaidSeat(payload: SeatPayload): Promise<BoardEntry> {
       listingKey: payload.listingKey,
       listingType: payload.listingType,
       logoUrl: payload.logoUrl,
+      description,
       bid: payload.bid,
       paid: true,
       createdAt: now,
       updatedAt: now,
       orderId: payload.orderId,
       checkoutId: payload.checkoutId,
+      clicks: 0,
     };
     state.entries.push(entry);
   }
+
+  const ranked = sortEntries(state.entries.filter((e) => e.paid));
+  const rank = ranked.findIndex((e) => e.id === entry.id) + 1;
+  if (rank === 1) kind = "took";
+
+  pushActivity(state, {
+    displayName: entry.displayName,
+    bid: entry.bid,
+    rank: rank > 0 ? rank : undefined,
+    kind,
+    at: now,
+  });
 
   await writeBoard(state);
   return entry;
@@ -176,50 +232,60 @@ export async function seedDemoUnpaid(): Promise<BoardEntry[]> {
       listing: "https://novastack.dev",
       listingKey: "url:novastack.dev",
       listingType: "url",
+      description: "Ship backend infra without the ops tax.",
       bid: 40,
       paid: false,
       createdAt: new Date(now - 5 * 60_000).toISOString(),
       updatedAt: new Date(now - 5 * 60_000).toISOString(),
+      clicks: 0,
     },
     {
       displayName: "PixelForge",
       listing: "@pixelforge",
       listingKey: "handle:pixelforge",
       listingType: "handle",
+      description: "Design systems that stay on brand.",
       bid: 25,
       paid: false,
       createdAt: new Date(now - 4 * 60_000).toISOString(),
       updatedAt: new Date(now - 4 * 60_000).toISOString(),
+      clicks: 0,
     },
     {
       displayName: "QuietOps",
       listing: "https://quietops.io",
       listingKey: "url:quietops.io",
       listingType: "url",
+      description: "Incident response without the pager panic.",
       bid: 15,
       paid: false,
       createdAt: new Date(now - 3 * 60_000).toISOString(),
       updatedAt: new Date(now - 3 * 60_000).toISOString(),
+      clicks: 0,
     },
     {
       displayName: "CopperWire",
       listing: "@copperwire",
       listingKey: "handle:copperwire",
       listingType: "handle",
+      description: "Hardware notes and tinkering in public.",
       bid: 10,
       paid: false,
       createdAt: new Date(now - 2 * 60_000).toISOString(),
       updatedAt: new Date(now - 2 * 60_000).toISOString(),
+      clicks: 0,
     },
     {
       displayName: "DeskLamp Co",
       listing: "https://desklamp.co",
       listingKey: "url:desklamp.co",
       listingType: "url",
+      description: "Warm desk light for late shipping nights.",
       bid: 5,
       paid: false,
       createdAt: new Date(now - 60_000).toISOString(),
       updatedAt: new Date(now - 60_000).toISOString(),
+      clicks: 0,
     },
   ];
 
@@ -228,31 +294,74 @@ export async function seedDemoUnpaid(): Promise<BoardEntry[]> {
     id: randomUUID(),
   }));
 
-  await writeBoard({ weekId, entries, updatedAt: new Date().toISOString() });
+  await writeBoard({
+    weekId,
+    entries,
+    activity: [],
+    updatedAt: new Date().toISOString(),
+  });
   return entries;
 }
+
+function deriveActivity(state: BoardState): ActivityEvent[] {
+  if (Array.isArray(state.activity) && state.activity.length > 0) {
+    return state.activity.slice(0, 8);
+  }
+  const ranked = sortEntries(state.entries);
+  return ranked
+    .slice()
+    .sort(
+      (a, b) =>
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+    )
+    .slice(0, 8)
+    .map((e, i) => {
+      const rank = ranked.findIndex((r) => r.id === e.id) + 1;
+      return {
+        id: e.id + ":" + e.updatedAt,
+        displayName: e.displayName,
+        bid: e.bid,
+        rank: rank > 0 ? rank : undefined,
+        kind: (rank === 1 ? "took" : "bid") as ActivityEvent["kind"],
+        at: e.updatedAt || e.createdAt,
+      };
+    });
+}
+
 export function publicBoardView(state: BoardState) {
   const ranked = sortEntries(state.entries);
   const weekId = state.weekId || currentWeekId();
+  const entries: PublicRow[] = ranked.map((e, i) => ({
+    rank: i + 1,
+    id: e.id,
+    displayName: e.displayName,
+    listing: e.listing,
+    listingType: e.listingType,
+    logoUrl: e.logoUrl || null,
+    faviconUrl: resolveFaviconUrl({
+      logoUrl: e.logoUrl,
+      listing: e.listing,
+      listingType: e.listingType,
+    }),
+    description: e.description || DEFAULT_DESCRIPTION,
+    bid: e.bid,
+    paid: e.paid,
+    isDemo: !e.paid,
+    createdAt: e.createdAt,
+    updatedAt: e.updatedAt,
+    claimThisRankPrice: claimPriceForSeat(e.bid),
+    clicks: e.clicks ?? 0,
+  }));
+
   return {
     weekId,
     resetsAt: nextMondayUtc().toISOString(),
     updatedAt: state.updatedAt,
     topBid: topBid(state.entries),
     claimOnePrice: claimPriceForTop(state.entries),
-    entries: ranked.map((e, i) => ({
-      rank: i + 1,
-      id: e.id,
-      displayName: e.displayName,
-      listing: e.listing,
-      listingType: e.listingType,
-      logoUrl: e.logoUrl || null,
-      bid: e.bid,
-      paid: e.paid,
-      isDemo: !e.paid,
-      createdAt: e.createdAt,
-      updatedAt: e.updatedAt,
-    })),
+    entries,
+    activity: deriveActivity(state),
+    visitorStub: 1204,
     pending: state.entries
       .filter((e) => !e.paid)
       .map((e) => ({

@@ -9,6 +9,7 @@ import { MIN_BID, TOP_BUMP } from "@/lib/constants";
 import { createCheckoutSession } from "@/lib/polar";
 import {
   validateBidAmount,
+  validateDescription,
   validateDisplayName,
   validateListing,
   validateLogoUrl,
@@ -21,6 +22,7 @@ export async function POST(req: NextRequest) {
     displayName?: string;
     listing?: string;
     logoUrl?: string;
+    description?: string;
     bid?: number;
   };
 
@@ -40,6 +42,11 @@ export async function POST(req: NextRequest) {
 
   const logoErr = validateLogoUrl(body.logoUrl);
   if (logoErr) return NextResponse.json({ error: logoErr }, { status: 400 });
+
+  const descCheck = validateDescription(body.description || "");
+  if (!descCheck.ok) {
+    return NextResponse.json({ error: descCheck.error }, { status: 400 });
+  }
 
   const bidCheck = validateBidAmount(body.bid);
   if (!bidCheck.ok) {
@@ -96,6 +103,7 @@ export async function POST(req: NextRequest) {
         listingKey: listing.listingKey,
         listingType: listing.listingType,
         logoUrl: (body.logoUrl || "").trim(),
+        description: descCheck.description,
         bid: String(bid),
         chargeAmount: String(chargeAmount),
         mode,

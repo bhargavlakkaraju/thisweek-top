@@ -72,3 +72,12 @@ export function formatWeekRange(
       })();
   return `Week ${formatUtcShort(start)} → ${formatUtcShort(end)} UTC`;
 }
+
+/** Short bar countdown: "1d 4h 14m" */
+export function formatCountdownShort(ms: number): string {
+  const totalSec = Math.floor(Math.max(0, ms) / 1000);
+  const days = Math.floor(totalSec / 86400);
+  const hours = Math.floor((totalSec % 86400) / 3600);
+  const mins = Math.floor((totalSec % 3600) / 60);
+  return `${days}d ${hours}h ${mins}m`;
+}

@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ThisWeek.top - Claim #1 for the week</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f7f5f1;
+    --surface: #fffdfa;
+    --surface-2: #ffffff;
+    --text: #282624;
+    --muted: #77726d;
+    --muted-2: #56514c;
+    --line: #e6e0da;
+    --accent: #e57255;
+    --accent-soft: #f8ebe6;
+    --accent-fg: #ffffff;
+    --live: #50c05f;
+    --radius: 0.625rem;
+    --font: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+    --mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --shadow: 0 1px 2px rgba(40, 38, 36, 0.04);
+    --header-h: 64px;
+    --claim-h: 64px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    line-height: 1.5;
+    min-height: 100%;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--text); text-decoration: none; }
+  a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+  button, input, textarea { font: inherit; color: inherit; }
+
+  .wrap {
+    width: min(72rem, calc(100% - 2.5rem));
+    margin: 0 auto;
+  }
+
+  /* Sticky header */
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    height: var(--header-h);
+    display: flex;
+    align-items: center;
+    backdrop-filter: blur(12px);
+    background: rgba(255, 253, 250, 0.92);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+  }
+  .brand {
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    font-size: 1.2rem;
+    text-decoration: none;
+  }
+  .brand span { color: var(--accent); }
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    font-size: 0.9rem;
+    color: var(--muted-2);
+  }
+  .nav-links a { color: var(--muted-2); font-weight: 500; text-decoration: none; }
+  .nav-links a:hover { color: var(--text); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    background: var(--accent);
+    color: var(--accent-fg);
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0.55rem 1rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--accent);
+    cursor: pointer;
+    text-decoration: none !important;
+    white-space: nowrap;
+    transition: filter 0.15s ease;
+  }
+  .btn:hover { filter: brightness(1.05); }
+  .btn-sm { padding: 0.4rem 0.75rem; font-size: 0.82rem; }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--line);
+  }
+  .btn-ghost:hover { background: var(--surface); filter: none; }
+  .btn-outline-coral {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: transparent;
+  }
+
+  /* Sticky Claim #1 bar */
+  .claim-bar {
+    position: sticky;
+    top: var(--header-h);
+    z-index: 30;
+    background: rgba(247, 245, 241, 0.96);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .claim-bar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.7rem 0;
+    flex-wrap: wrap;
+    min-height: var(--claim-h);
+  }
+  .claim-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+  }
+  .claim-label {
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: -0.02em;
+  }
+  .claim-label em {
+    font-style: normal;
+    color: var(--accent);
+  }
+  .stepper {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    overflow: hidden;
+  }
+  .stepper button {
+    width: 2.1rem;
+    height: 2.1rem;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--text);
+    font-size: 1.1rem;
+    font-weight: 600;
+    line-height: 1;
+  }
+  .stepper button:hover { background: var(--accent-soft); color: var(--accent); }
+  .stepper button:disabled { opacity: 0.35; cursor: not-allowed; }
+  .stepper .price {
+    min-width: 4.2rem;
+    text-align: center;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 1.05rem;
+    font-variant-numeric: tabular-nums;
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    padding: 0 0.5rem;
+    height: 2.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .claim-quiet {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .claim-quiet strong {
+    font-family: var(--mono);
+    font-weight: 600;
+    color: var(--muted-2);
+  }
+
+  /* Hero quiet */
+  .hero {
+    padding: 2rem 0 1.25rem;
+  }
+  .hero h1 {
+    font-size: clamp(1.75rem, 3.2vw, 2.35rem);
+    letter-spacing: -0.04em;
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 0.55rem;
+  }
+  .hero h1 em {
+    font-style: normal;
+    color: var(--accent);
+    font-family: var(--mono);
+  }
+  .hero .lead {
+    color: var(--muted-2);
+    max-width: 40rem;
+    font-size: 1.02rem;
+    margin-bottom: 0.85rem;
+  }
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.65rem 1.1rem;
+    font-size: 0.88rem;
+    color: var(--muted);
+  }
+  .meta-row .dot-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .meta-row .dot-live::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--live);
+    box-shadow: 0 0 0 3px rgba(80, 192, 95, 0.18);
+  }
+  .visitors {
+    color: var(--muted);
+  }
+
+  /* Layout: board + rail */
+  .main-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 18.5rem;
+    gap: 1.5rem;
+    align-items: start;
+    padding-bottom: 2.5rem;
+  }
+  @media (max-width: 980px) {
+    .main-grid { grid-template-columns: 1fr; }
+  }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  .section-head h2 {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* Listing cards */
+  .cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+  .listing-card {
+    display: grid;
+    grid-template-columns: 2.4rem 2rem minmax(0, 1fr) auto auto auto;
+    align-items: center;
+    gap: 0.85rem 1rem;
+    padding: 0.85rem 1rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  .listing-card.is-top {
+    border-color: #efc8bc;
+    background: linear-gradient(180deg, #fffdfa 0%, #fff7f3 100%);
+  }
+  @media (max-width: 820px) {
+    .listing-card {
+      grid-template-columns: 2rem 1.75rem minmax(0, 1fr);
+      grid-template-areas:
+        "rank fav id"
+        "rank fav bid"
+        "cta cta cta";
+    }
+    .listing-card .rank { grid-area: rank; }
+    .listing-card .fav { grid-area: fav; }
+    .listing-card .identity { grid-area: id; }
+    .listing-card .bid-col { grid-area: bid; justify-self: start; }
+    .listing-card .meta-col { display: none; }
+    .listing-card .cta-col { grid-area: cta; }
+  }
+
+  .rank {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted-2);
+    font-size: 0.95rem;
+  }
+  .listing-card.is-top .rank {
+    color: var(--accent);
+    font-size: 1.15rem;
+  }
+
+  .fav {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: #f0ebe4;
+    object-fit: contain;
+    display: block;
+  }
+  .fav-fallback {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.02em;
+  }
+
+  .identity { min-width: 0; }
+  .identity .name {
+    font-weight: 600;
+    font-size: 0.98rem;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .identity .handle {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .identity .desc {
+    margin-top: 0.15rem;
+    font-size: 0.82rem;
+    color: var(--muted-2);
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .bid-col {
+    text-align: right;
+    min-width: 4.5rem;
+  }
+  .bid-col .amount {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 1.2rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+  }
+  .meta-col {
+    text-align: right;
+    min-width: 4.2rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .cta-col { justify-self: end; }
+
+  /* Activity rail */
+  .rail {
+    position: sticky;
+    top: calc(var(--header-h) + var(--claim-h) + 0.75rem);
+  }
+  .rail-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 0.95rem 1rem;
+    box-shadow: var(--shadow);
+  }
+  .rail-card h3 {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+  }
+  .activity-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+  .activity-list li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    font-size: 0.86rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .activity-list li:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  .activity-list .who {
+    font-weight: 560;
+    color: var(--text);
+  }
+  .activity-list .what {
+    color: var(--muted-2);
+    font-size: 0.82rem;
+  }
+  .activity-list .when {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  .countdown-box {
+    margin-top: 0.75rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 0.85rem 1rem;
+  }
+  .countdown-box .label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 0.25rem;
+  }
+  .countdown-box .timer {
+    font-family: var(--mono);
+    font-weight: 650;
+    font-size: 1.05rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+  }
+
+  /* Claim form */
+  .claim-section {
+    padding: 0.5rem 0 2.5rem;
+  }
+  .claim-panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.35rem;
+    box-shadow: var(--shadow);
+    max-width: 40rem;
+  }
+  .claim-panel h2 {
+    font-size: 1.15rem;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.35rem;
+  }
+  .claim-panel .hint {
+    color: var(--muted);
+    font-size: 0.88rem;
+    margin-bottom: 1rem;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 0.85rem;
+  }
+  .field label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--muted-2);
+  }
+  .field label .req { color: var(--accent); }
+  .field input, .field textarea {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    padding: 0.65rem 0.75rem;
+    outline: none;
+  }
+  .field input:focus, .field textarea:focus {
+    border-color: #efc8bc;
+    box-shadow: 0 0 0 3px rgba(229, 114, 85, 0.12);
+  }
+  .field textarea {
+    min-height: 5.5rem;
+    resize: vertical;
+  }
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 8rem;
+    gap: 0.75rem;
+  }
+  @media (max-width: 560px) {
+    .field-row { grid-template-columns: 1fr; }
+  }
+  .counter {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-align: right;
+  }
+  .counter.warn { color: #9a6b2f; }
+  .counter.over { color: #e40014; }
+
+  .honesty {
+    margin: 0 auto 2.5rem;
+    max-width: 40rem;
+    text-align: center;
+    font-size: 0.84rem;
+    color: var(--muted);
+    line-height: 1.55;
+  }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 1.25rem 0 2rem;
+    font-size: 0.82rem;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  footer a { color: var(--muted-2); }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap nav">
+    <a class="brand" href="#">ThisWeek<span>.top</span></a>
+    <div class="nav-links">
+      <a href="#board">Board</a>
+      <a href="#claim">Claim</a>
+      <a href="#rules">Rules</a>
+      <a class="btn btn-sm" href="#claim">Claim #1</a>
+    </div>
+  </div>
+</header>
+
+<div class="claim-bar" id="claim-bar">
+  <div class="wrap claim-bar-inner">
+    <div class="claim-left">
+      <div class="claim-label">Claim <em>#1</em></div>
+      <div class="stepper" aria-label="Bid amount stepper">
+        <button type="button" id="bid-minus" aria-label="Decrease bid">−</button>
+        <div class="price" id="claim-price">$125</div>
+        <button type="button" id="bid-plus" aria-label="Increase bid">+</button>
+      </div>
+      <a class="btn" href="#claim" id="claim-cta">Claim #1 for $125</a>
+    </div>
+    <div class="claim-quiet">Resets Monday 00:00 UTC · <strong id="bar-countdown">1d 4h 14m</strong></div>
+  </div>
+</div>
+
+<main>
+  <div class="wrap">
+    <section class="hero">
+      <h1>Claim #1 for <em id="hero-price">$125</em></h1>
+      <p class="lead">Pay to stand above everyone else this week. Rank is the bid. Board resets Monday 00:00 UTC.</p>
+      <div class="meta-row">
+        <span class="dot-live">Current #1: Linear · $120</span>
+        <span class="visitors" id="visitor-stub">1,204 visitors this week</span>
+        <span>Week of 18 Aug - 24 Aug 2026</span>
+      </div>
+    </section>
+
+    <div class="main-grid" id="board">
+      <section>
+        <div class="section-head">
+          <h2>This week&rsquo;s board</h2>
+          <span style="font-size:0.8rem;color:var(--muted)">9 listings · min $5</span>
+        </div>
+        <div class="cards" id="cards"></div>
+      </section>
+
+      <aside class="rail">
+        <div class="rail-card">
+          <h3>Latest activity</h3>
+          <ul class="activity-list" id="activity"></ul>
+        </div>
+        <div class="countdown-box">
+          <div class="label">Board clears Monday 00:00 UTC</div>
+          <div class="timer" id="side-countdown">1d 4h 14m 22s</div>
+        </div>
+      </aside>
+    </div>
+
+    <section class="claim-section" id="claim">
+      <div class="claim-panel">
+        <h2>Place a bid</h2>
+        <p class="hint">New listing min $5. Taking #1 needs at least current top + $5. Description is required.</p>
+        <form id="claim-form" onsubmit="return false;">
+          <div class="field">
+            <label for="name">Display name <span class="req">*</span></label>
+            <input id="name" name="name" type="text" placeholder="Acme" required maxlength="60" />
+          </div>
+          <div class="field">
+            <label for="listing">Website or @handle <span class="req">*</span></label>
+            <input id="listing" name="listing" type="text" placeholder="https://acme.com or @acme" required />
+          </div>
+          <div class="field">
+            <label for="logo">Logo URL <span style="font-weight:500;color:var(--muted)">(optional)</span></label>
+            <input id="logo" name="logo" type="url" placeholder="https://..." />
+          </div>
+          <div class="field">
+            <label for="description">One-line description <span class="req">*</span></label>
+            <textarea id="description" name="description" maxlength="140" required placeholder="What you ship in one line (max 140 chars)"></textarea>
+            <div class="counter" id="desc-counter">0/140</div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="bid">Bid (USD) <span class="req">*</span></label>
+              <input id="bid" name="bid" type="number" min="5" step="1" value="125" required />
+            </div>
+            <div class="field" style="justify-content:flex-end;">
+              <label>&nbsp;</label>
+              <button class="btn" type="submit" style="height:2.65rem;">Continue to pay</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <div class="honesty" id="rules">
+      Paid status. Not a quality score. No traffic promises. No forever rank. Board clears Monday 00:00 UTC.
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap" style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;width:100%;">
+    <span>ThisWeek.top · weekly pay-to-rank board</span>
+    <span>
+      <a href="#">Rules</a> ·
+      <a href="#">About</a> ·
+      <a href="#">Privacy</a>
+    </span>
+  </div>
+</footer>
+
+<script>
+  const WEEK_TOP = 120;
+  const FLOOR = Math.max(5, WEEK_TOP + 5); // 125
+  let claimPrice = FLOOR;
+
+  const listings = [
+    {
+      rank: 1,
+      name: "Linear",
+      listing: "linear.app",
+      domain: "linear.app",
+      desc: "Issue tracking built for high-speed product teams that ship every week.",
+      bid: 120,
+      ago: "2h ago",
+      color: "#5E6AD2"
+    },
+    {
+      rank: 2,
+      name: "Resend",
+      listing: "resend.com",
+      domain: "resend.com",
+      desc: "Email API for developers. Simple REST, React email, and deliverability that works.",
+      bid: 95,
+      ago: "4h ago",
+      color: "#000000"
+    },
+    {
+      rank: 3,
+      name: "Cursor",
+      listing: "cursor.com",
+      domain: "cursor.com",
+      desc: "AI code editor that knows your repo. Pair program with models that can edit files.",
+      bid: 80,
+      ago: "6h ago",
+      color: "#F54E00"
+    },
+    {
+      rank: 4,
+      name: "Raycast",
+      listing: "raycast.com",
+      domain: "raycast.com",
+      desc: "Launcher that replaces Spotlight. Extensions, AI, and shortcuts for Mac power users.",
+      bid: 65,
+      ago: "9h ago",
+      color: "#FF6363"
+    },
+    {
+      rank: 5,
+      name: "Cal.com",
+      listing: "cal.com",
+      domain: "cal.com",
+      desc: "Open scheduling infrastructure. Bookings, availability, and calendars without the tax.",
+      bid: 50,
+      ago: "11h ago",
+      color: "#292929"
+    },
+    {
+      rank: 6,
+      name: "Dub",
+      listing: "dub.co",
+      domain: "dub.co",
+      desc: "Link attribution for modern marketing teams. Short links with real conversion data.",
+      bid: 40,
+      ago: "14h ago",
+      color: "#1F1F23"
+    },
+    {
+      rank: 7,
+      name: "t3.gg",
+      listing: "@t3dotgg",
+      domain: "x.com",
+      desc: "Theo builds in public - TypeScript, Next.js, and opinions about shipping software.",
+      bid: 30,
+      ago: "18h ago",
+      color: "#111111",
+      isHandle: true
+    },
+    {
+      rank: 8,
+      name: "Supabase",
+      listing: "supabase.com",
+      domain: "supabase.com",
+      desc: "Postgres backend with auth, storage, and realtime. Open source Firebase alternative.",
+      bid: 25,
+      ago: "1d ago",
+      color: "#3ECF8E"
+    },
+    {
+      rank: 9,
+      name: "Loom",
+      listing: "loom.com",
+      domain: "loom.com",
+      desc: "Async video messages for work. Record once, share a link, skip the meeting.",
+      bid: 15,
+      ago: "1d ago",
+      color: "#625DF5"
+    }
+  ];
+
+  const activity = [
+    { who: "Linear", what: "bid $120 · took #1", when: "2h ago" },
+    { who: "Resend", what: "bid $95 · took #2", when: "4h ago" },
+    { who: "Cursor", what: "raised to $80", when: "6h ago" },
+    { who: "Raycast", what: "bid $65 · took #4", when: "9h ago" },
+    { who: "Cal.com", what: "bid $50", when: "11h ago" },
+    { who: "Dub", what: "bid $40 · took #6", when: "14h ago" },
+    { who: "t3.gg", what: "bid $30", when: "18h ago" },
+    { who: "Supabase", what: "bid $25 · took #8", when: "1d ago" }
+  ];
+
+  function faviconUrl(domain) {
+    return "https://www.google.com/s2/favicons?domain=" + encodeURIComponent(domain) + "&sz=64";
+  }
+
+  function renderCards() {
+    const root = document.getElementById("cards");
+    root.innerHTML = listings.map((item) => {
+      const next = item.bid + 5;
+      const cta = item.rank === 1 ? "Raise" : "Claim this rank";
+      const fav = faviconUrl(item.domain);
+      return (
+        '<article class="listing-card' + (item.rank === 1 ? " is-top" : "") + '">' +
+          '<div class="rank">#' + item.rank + "</div>" +
+          '<img class="fav" src="' + fav + '" alt="" width="30" height="30" ' +
+            'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'" />' +
+          '<div class="fav-fallback" style="display:none;background:' + item.color + '">' +
+            item.name.slice(0, 2).toUpperCase() +
+          "</div>" +
+          '<div class="identity">' +
+            '<div class="name">' + item.name + "</div>" +
+            '<div class="handle">' + item.listing + "</div>" +
+            '<div class="desc">' + item.desc + "</div>" +
+          "</div>" +
+          '<div class="bid-col"><div class="amount">$' + item.bid + "</div></div>" +
+          '<div class="meta-col">' + item.ago + "</div>" +
+          '<div class="cta-col">' +
+            '<a class="btn btn-sm btn-outline-coral" href="#claim" data-next="' + next + '">' +
+              cta + " · $" + next +
+            "</a>" +
+          "</div>" +
+        "</article>"
+      );
+    }).join("");
+  }
+
+  function renderActivity() {
+    const root = document.getElementById("activity");
+    root.innerHTML = activity.map((a) => (
+      "<li>" +
+        '<span class="who">' + a.who + "</span>" +
+        '<span class="what">' + a.what + "</span>" +
+        '<span class="when">' + a.when + "</span>" +
+      "</li>"
+    )).join("");
+  }
+
+  function syncClaimUI() {
+    const label = "$" + claimPrice;
+    document.getElementById("claim-price").textContent = label;
+    document.getElementById("claim-cta").textContent = "Claim #1 for " + label;
+    document.getElementById("hero-price").textContent = label;
+    const bidInput = document.getElementById("bid");
+    if (bidInput) bidInput.value = String(claimPrice);
+    document.getElementById("bid-minus").disabled = claimPrice <= FLOOR;
+  }
+
+  document.getElementById("bid-minus").addEventListener("click", () => {
+    if (claimPrice > FLOOR) {
+      claimPrice -= 1;
+      syncClaimUI();
+    }
+  });
+  document.getElementById("bid-plus").addEventListener("click", () => {
+    claimPrice += 1;
+    syncClaimUI();
+  });
+
+  const desc = document.getElementById("description");
+  const counter = document.getElementById("desc-counter");
+  desc.addEventListener("input", () => {
+    const n = desc.value.length;
+    counter.textContent = n + "/140";
+    counter.classList.toggle("warn", n >= 120 && n <= 140);
+    counter.classList.toggle("over", n > 140);
+  });
+
+  function nextMondayUTC(from = new Date()) {
+    const d = new Date(from.getTime());
+    d.setUTCHours(0, 0, 0, 0);
+    const day = d.getUTCDay(); // 0 Sun .. 1 Mon
+    const add = day === 1 ? 7 : (8 - day) % 7 || 7;
+    // If already Monday 00:00 exactly, next is +7; if past Monday, next Monday
+    if (day === 1 && from.getTime() > d.getTime()) {
+      d.setUTCDate(d.getUTCDate() + 7);
+    } else if (day !== 1) {
+      d.setUTCDate(d.getUTCDate() + ((1 - day + 7) % 7 || 7));
+    }
+    // Simpler: always find upcoming Monday 00:00 UTC strictly in the future
+    const t = new Date(from.getTime());
+    const next = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate(), 0, 0, 0, 0));
+    const dow = next.getUTCDay();
+    let days = (1 - dow + 7) % 7;
+    if (days === 0 && from >= next) days = 7;
+    next.setUTCDate(next.getUTCDate() + days);
+    return next;
+  }
+
+  function formatCountdown(ms) {
+    if (ms < 0) ms = 0;
+    const s = Math.floor(ms / 1000);
+    const days = Math.floor(s / 86400);
+    const hours = Math.floor((s % 86400) / 3600);
+    const mins = Math.floor((s % 3600) / 60);
+    const secs = s % 60;
+    return days + "d " + hours + "h " + mins + "m " + secs + "s";
+  }
+
+  function formatCountdownShort(ms) {
+    if (ms < 0) ms = 0;
+    const s = Math.floor(ms / 1000);
+    const days = Math.floor(s / 86400);
+    const hours = Math.floor((s % 86400) / 3600);
+    const mins = Math.floor((s % 3600) / 60);
+    return days + "d " + hours + "h " + mins + "m";
+  }
+
+  function tickCountdown() {
+    const target = nextMondayUTC();
+    const ms = target.getTime() - Date.now();
+    document.getElementById("side-countdown").textContent = formatCountdown(ms);
+    document.getElementById("bar-countdown").textContent = formatCountdownShort(ms);
+  }
+
+  renderCards();
+  renderActivity();
+  syncClaimUI();
+  tickCountdown();
+  setInterval(tickCountdown, 1000);
+</script>
+</body>
+</html>
