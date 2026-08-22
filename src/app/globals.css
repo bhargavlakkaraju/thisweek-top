@@ -1134,3 +1134,18 @@ button.claim-link {
   .ladder { grid-template-columns: repeat(2, 1fr); }
   .totals-bar a { margin-left: 0; }
 }
+
+/* Reservation capture — shown only while payments are being switched on */
+.reserve-panel {
+  margin: 1.25rem 0;
+  padding: 1.25rem 1.35rem;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-xl);
+  background: var(--accent-tint);
+}
+.reserve-panel h2 { font-size: 1.05rem; letter-spacing: -0.01em; margin-bottom: 0.45rem; }
+.reserve-panel p { color: var(--muted-2); font-size: 0.92rem; line-height: 1.6; }
+.reserve-actions { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin: 0.9rem 0 0.5rem; }
+.reserve-actions .btn-claim { display: inline-flex; align-items: center; text-decoration: none; }
+.reserve-dismiss { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.85rem; text-decoration: underline; }
+.reserve-note { font-size: 0.78rem; color: var(--muted); }

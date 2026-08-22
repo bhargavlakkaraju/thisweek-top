@@ -23,6 +23,7 @@ export function HomeBoard({
   const [selected, setSelected] = useState(firstOpen.id as string);
   const [claiming, setClaiming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [reserve, setReserve] = useState<{ tier: string; listing: string } | null>(null);
 
   function onSelect(tierId: string) {
     setSelected(tierId);
@@ -52,6 +53,12 @@ export function HomeBoard({
           status: res.status,
           reason: (data.error || "unknown").slice(0, 80),
         });
+        // Payments not live yet: capture the intent instead of losing the visitor.
+        if (data.code === "payments_not_live") {
+          setReserve({ tier: tierId, listing: listingValue });
+          track("reservation_offered", { tier: tierId });
+          return;
+        }
         setError(data.error || "Could not start checkout.");
         return;
       }
@@ -85,6 +92,14 @@ export function HomeBoard({
         error={error}
       />
 
+      {reserve ? (
+        <ReservePanel
+          tier={tiers.find((t) => t.id === reserve.tier)}
+          listing={reserve.listing}
+          onDismiss={() => setReserve(null)}
+        />
+      ) : null}
+
       <section className="totals-bar" aria-label="Board totals">
         <span>
           <strong>{totals.listings.toLocaleString("en-US")}</strong> listings live
@@ -110,5 +125,61 @@ export function HomeBoard({
         traffic. Every click number on this page is measured, never estimated.
       </p>
     </div>
+  );
+}
+
+function ReservePanel({
+  tier,
+  listing,
+  onDismiss,
+}: {
+  tier?: BoardView["tiers"][number];
+  listing: string;
+  onDismiss: () => void;
+}) {
+  const label = tier?.label ?? "a seat";
+  const subject = `Reserve ${label} on 111111.live`;
+  const body = [
+    `I want to reserve the ${label} rung on 111111.live.`,
+    "",
+    `Listing: ${listing}`,
+    `Band: ${label}${tier ? ` (${tier.duration})` : ""}`,
+    "",
+    "Email me the moment seats open.",
+  ].join("\n");
+
+  const mailto = `mailto:bhargav@hooplaindia.com?subject=${encodeURIComponent(
+    subject,
+  )}&body=${encodeURIComponent(body)}`;
+
+  return (
+    <section className="reserve-panel" role="status">
+      <h2>Seats open in a few hours, not weeks</h2>
+      <p>
+        Payments are being switched on right now. Reserve the {label} rung and
+        you get first refusal on it before the band goes public &mdash; at the
+        same price, which never moves.
+      </p>
+      <p className="reserve-actions">
+        <a
+          className="btn-claim"
+          href={mailto}
+          onClick={() =>
+            track("reservation_started", {
+              tier: tier?.id ?? "unknown",
+              price: tier?.price ?? 0,
+            })
+          }
+        >
+          Reserve {label}
+        </a>
+        <button type="button" className="reserve-dismiss" onClick={onDismiss}>
+          Not now
+        </button>
+      </p>
+      <p className="reserve-note">
+        No card, no account. One email, and your rung is held.
+      </p>
+    </section>
   );
 }
