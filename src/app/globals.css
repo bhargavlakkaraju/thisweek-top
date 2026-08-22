@@ -233,6 +233,10 @@ button, input { font: inherit; color: inherit; }
   font-size: 0.8rem;
   color: var(--muted);
 }
+.strip-error {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}
 
 /* Featured top 3 cards */
 .featured {
